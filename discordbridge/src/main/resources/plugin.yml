@@ -1,0 +1,23 @@
+name: DiscordBridge
+version: '2.0.0'
+main: com.example.discordbridge.DiscordBridge
+api-version: '1.21'
+author: Claude
+description: Verbindt de server met de losse OoitGedacht Discord-bot (via RCON) - logs, chat, status, en /msg /kick /ban vanuit Discord.
+
+commands:
+  discord:
+    description: Krijg de link naar onze Discord-server.
+    usage: /discord
+  discordbridge:
+    description: Intern commando voor de Discord-bot (alleen via console/RCON).
+    usage: /discordbridge rpc <data>
+    permission: discordbridge.rpc
+
+permissions:
+  discordbridge.rpc:
+    description: Intern; de bot gebruikt dit via RCON. Spelers worden in de code altijd geweigerd.
+    default: op
+  discordbridge.seemsg:
+    description: Ziet in-game mee als beheer via Discord een speler een bericht stuurt, kickt of verbant.
+    default: op

@@ -2,8 +2,9 @@
 
 Gemaakt met behulp van CLAUD AI
 
-Zes losse Paper-plugins, elk een eigen Maven-project (eigen `pom.xml`). Bouwen gaat overal
-hetzelfde: `cd <map>` dan `mvn package`, de jar komt in `<map>/target/<naam>.jar`.
+Zes losse Paper-plugins plus een losse Discord-bot, elk een eigen Maven-project (eigen
+`pom.xml`). Bouwen gaat overal hetzelfde: `cd <map>` dan `mvn package`, de jar komt in
+`<map>/target/<naam>.jar`.
 
 Check per project de `paper-api`-versie in `pom.xml` en zet die gelijk aan de Minecraft-versie
 van de server (die blijkt nu 1.21.9 "The Copper Age" of nieuwer te zijn, zie funitems).
@@ -70,52 +71,55 @@ Leuke rechtermuisklik-spelletjes met nuggets (geen commando's):
 - Elk item heeft een eigen cooldown tegen spammen. Uitdelen via `/give <speler> gold_nugget 1`
   (en `copper_nugget` / `iron_nugget`).
 
-## discordbot
-Echte Discord-bot (JDA, draait ín de Minecraft-server — aan als de server aan is, offline als
-de server uit is):
-- **Status in het bot-profiel**: "Kijkt naar 3/20 spelers op OoitGedacht" (tekst/type in config).
-- **Logs** naar het log-kanaal: server start/stop, joins, leaves, doden, /report, gamemode-wissels,
-  items uit het creative-menu, "moved too quickly"-waarschuwingen (via de console meegelezen),
-  gebruik van commando's als /give en /gamemode (lijst in config), en wie er vanuit Discord
-  gemodereerd heeft.
-- Alle logs als **embed** (gekleurde rand per soort, Minecraft-hoofd van de speler, tijdstip).
-- **In-game chat** naar een apart kanaal (`bot.chat-channel-id`).
-- **Live statusbericht** in een eigen kanaal (`bot.status-channel-id`): één bericht dat elke
-  minuut bijgewerkt wordt met online/offline, spelers, TPS, uptime, en de SurvivalTimeline-fase
-  (week, hardcore, Nether/End met live aftellers, wereldgrens). Leest SurvivalTimeline's
-  `data.yml` rechtstreeks, die plugin hoeft niet aangepast. Bot heeft daar `Embed Links` nodig.
-- **`/discord` in-game**: klikbare uitnodigingslink (`discord-command.invite-link`).
-- **Slash-commando's in Discord**:
-  - `/spelers` — voor iedereen: wie is er online.
-  - `/msg <speler> <bericht>`, `/kick <speler> [reden]`, `/ban <speler> [reden]`,
-    `/unban <speler>` — alleen voor de eigenaar, Administrators, en optioneel één extra rol
-    (`bot.staff-role-id`). Spelersnamen worden automatisch aangevuld.
-  - `/embed [kanaal] [bericht-id]` — beheer: formulier voor een bericht met gekleurde rand
-    (titel, tekst, kleur, afbeelding, voettekst), bv. de regels. Met `bericht-id` bewerk je een
-    eerder geplaatst bericht.
-- **Fun-commando's voor iedereen** (`fun.enabled`):
-  - `/deaths [speler]` — ranglijst meeste doden (vanilla-statistiek, ook offline spelers).
-  - `/streak` — 1x per dag (middernacht, `fun.timezone`) typen om een streak op te bouwen;
-    `/streaks` toont de langste lopende streaks. Opgeslagen in `plugins/DiscordBot/data.yml`.
-  - `/goldnugget`, `/coppernugget [keuze]`, `/ironnugget` — zelfde spelletjes als FunItems,
-    met de teksten/kansen/cooldowns uit FunItems' config.
-- In-game ziet beheer (`discordbot.seemsg`, default op) mee wat er vanuit Discord gebeurt.
-- Let op: StaffTools logt joins/leaves/reports ook al via de webhook. Gebruik je deze bot, zet
-  dan in StaffTools `discord.webhook-url` leeg, anders krijg je alles dubbel.
+## Discord-bot: ooitgedacht-bot + discordbridge
+De bot bestaat uit twee delen, zodat hij 24/7 online blijft, ook als AMP de Minecraft-server
+laat slapen:
 
-### Bot instellen (eenmalig)
-1. Ga naar https://discord.com/developers/applications -> **New Application** -> naam geven.
-2. Tabblad **Bot** -> **Reset Token** -> kopieer de token naar `bot.token` in
-   `plugins/DiscordBot/config.yml`. Deel deze token nooit. Er hoeven géén "Privileged Gateway
-   Intents" aan.
-3. Tabblad **OAuth2** -> **URL Generator**: vink `bot` en `applications.commands` aan, en bij
-   Bot Permissions: `View Channels`, `Send Messages`. Open de gegenereerde link en nodig de bot
-   uit op je server.
-4. In Discord: Gebruikersinstellingen -> Geavanceerd -> **Ontwikkelaarsmodus** aan. Dan
-   rechtermuisklik op je server -> "Server-ID kopiëren" -> `bot.guild-id`, en rechtermuisklik
-   op het log-kanaal -> "Kanaal-ID kopiëren" -> `bot.log-channel-id`.
-5. Jar in `plugins/`, server herstarten. In de console moet "Ingelogd op Discord als ..." en
-   "Discord-commando's geregistreerd" verschijnen.
+```
+ Discord  <-->  ooitgedacht-bot  <-- RCON -->  Minecraft-server + DiscordBridge-plugin
+               (eigen AMP-instance,             (mag slapen; de bot merkt dat vanzelf)
+                "Java App Runner", 24/7)
+```
+
+- **`ooitgedacht-bot`** — los Java-programma (`java -jar ooitgedacht-bot.jar`, leest
+  `config.yml` + `data.json` uit de werkmap). Houdt de Discord-verbinding, en haalt elke paar
+  seconden via RCON nieuwe logs op bij de plugin. Bevat de token; de plugin niet.
+- **`discordbridge`** — kleine plugin op de server. Zet logs klaar in een wachtrij en beantwoordt
+  verzoeken van de bot via het interne console-commando `discordbridge rpc <base64-JSON>`
+  (spelers kunnen dat niet uitvoeren).
+
+Wat het doet:
+- **Profielstatus**: "Kijkt naar 3/20 spelers" als de server wakker is; "💤 Server slaapt" (en
+  status "afwezig") als hij slaapt.
+- **Logs** als embed (gekleurde rand, Minecraft-hoofd): server gestart / in slaap, joins, leaves,
+  doden, /report, gamemode-wissels, items uit creative, "moved too quickly" (console meegelezen),
+  commando's als /give (lijst in de plugin-config), en acties vanuit Discord. Chat naar een eigen
+  kanaal. Rol-ping bij belangrijke logs (`logs.ping-on` in de bot-config, met cooldown).
+- **Live statusbericht**: online/slapend, spelers, TPS, uptime, SurvivalTimeline-fase (week,
+  hardcore, Nether/End met live aftellers, wereldgrens). Tijdens de slaap blijft de laatst bekende
+  tijdlijn staan.
+- **Altijd beschikbaar** (ook als de server slaapt): `/streak`, `/streaks`, `/goldnugget`,
+  `/coppernugget [keuze]`, `/ironnugget`, `/embed` (beheer: formulier voor een bericht met
+  gekleurde rand; met `bericht-id` bewerk je een eerder bericht).
+- **Alleen als de server wakker is**: `/spelers`, `/deaths [speler]` (slapend: laatst bekende
+  ranglijst), en voor beheer `/msg`, `/kick`, `/ban`, `/unban`.
+- **`/discord` in-game**: klikbare uitnodigingslink (`discord-command.invite-link` in de plugin).
+- Let op: StaffTools logt joins/leaves/reports ook al via de webhook. Zet daar
+  `discord.webhook-url` leeg, anders krijg je alles dubbel.
+
+### Instellen (eenmalig)
+1. **Discord-app**: https://discord.com/developers/applications -> je app -> **Bot** ->
+   **Reset Token**. Er hoeven géén "Privileged Gateway Intents" aan. Uitnodigen via **OAuth2** ->
+   **URL Generator** met `bot` + `applications.commands`, en rechten `View Channels`,
+   `Send Messages`, `Embed Links` (+ evt. `Mention All Roles` voor pings).
+2. **RCON aan** op de Minecraft-server (`server.properties`): `enable-rcon=true`,
+   `rcon.port=25575`, `rcon.password=<lang wachtwoord>`. Zet de RCON-poort **niet** open naar
+   internet; de bot draait op dezelfde machine.
+3. **Plugin**: `discordbridge/target/discordbridge.jar` in `plugins/`, server herstarten.
+4. **Bot**: in AMP een **Java App Runner**-instance, `ooitgedacht-bot/target/ooitgedacht-bot.jar`
+   erin, één keer starten (maakt `config.yml`), daarin token, guild-id, kanaal-ID's en
+   `server.rcon-password` invullen, opnieuw starten. In de bot-console moet
+   "Ingelogd op Discord als ..." en "Verbonden met de Minecraft-server." verschijnen.
 
 ---
 

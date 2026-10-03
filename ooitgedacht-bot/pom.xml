@@ -4,8 +4,13 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
+    <!--
+      Losse Discord-bot (geen Minecraft-plugin). Draait 24/7 in een eigen AMP-instance
+      ("Java App Runner"), zodat hij online blijft als de Minecraft-server slaapt.
+      Starten: java -jar ooitgedacht-bot.jar  (leest config.yml uit de huidige map)
+    -->
     <groupId>com.example</groupId>
-    <artifactId>discordbot</artifactId>
+    <artifactId>ooitgedacht-bot</artifactId>
     <version>1.0.0</version>
     <packaging>jar</packaging>
 
@@ -15,38 +20,8 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     </properties>
 
-    <repositories>
-        <repository>
-            <id>papermc</id>
-            <url>https://repo.papermc.io/repository/maven-public/</url>
-        </repository>
-    </repositories>
-
     <dependencies>
-        <!-- Pas de versie aan naar de Minecraft-versie van je server, net als bij de andere plugins. -->
-        <dependency>
-            <groupId>io.papermc.paper</groupId>
-            <artifactId>paper-api</artifactId>
-            <version>1.21.9-R0.1-SNAPSHOT</version>
-            <scope>provided</scope>
-        </dependency>
-
-        <!--
-          Logsysteem van de server zelf. Nodig om "moved too quickly"-meldingen
-          uit de console te kunnen meelezen; zit al in Paper, dus 'provided'.
-        -->
-        <dependency>
-            <groupId>org.apache.logging.log4j</groupId>
-            <artifactId>log4j-core</artifactId>
-            <version>2.24.3</version>
-            <scope>provided</scope>
-        </dependency>
-
-        <!--
-          JDA = de Java-bibliotheek om met Discord te praten. Wordt mee in de
-          jar gestopt (zie maven-shade-plugin hieronder), zodat je op de server
-          niks extra's hoeft te installeren.
-        -->
+        <!-- JDA = de Java-bibliotheek om met Discord te praten (brengt ook Jackson voor JSON mee). -->
         <dependency>
             <groupId>net.dv8tion</groupId>
             <artifactId>JDA</artifactId>
@@ -57,12 +32,21 @@
                     <groupId>club.minnced</groupId>
                     <artifactId>opus-java</artifactId>
                 </exclusion>
-                <!-- Zit al in Paper zelf; JDA's logs komen zo gewoon in de server-console. -->
-                <exclusion>
-                    <groupId>org.slf4j</groupId>
-                    <artifactId>slf4j-api</artifactId>
-                </exclusion>
             </exclusions>
+        </dependency>
+
+        <!-- JSON (berichten van/naar de server-plugin, data.json). JDA gebruikt dit ook. -->
+        <dependency>
+            <groupId>com.fasterxml.jackson.core</groupId>
+            <artifactId>jackson-databind</artifactId>
+            <version>2.18.2</version>
+        </dependency>
+
+        <!-- Om config.yml te lezen. -->
+        <dependency>
+            <groupId>org.yaml</groupId>
+            <artifactId>snakeyaml</artifactId>
+            <version>2.2</version>
         </dependency>
     </dependencies>
 
@@ -86,6 +70,12 @@
                         </goals>
                         <configuration>
                             <createDependencyReducedPom>false</createDependencyReducedPom>
+                            <transformers>
+                                <transformer implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
+                                    <mainClass>com.example.ooitbot.BotMain</mainClass>
+                                </transformer>
+                                <transformer implementation="org.apache.maven.plugins.shade.resource.ServicesResourceTransformer"/>
+                            </transformers>
                             <filters>
                                 <filter>
                                     <artifact>*:*</artifact>
@@ -93,7 +83,8 @@
                                         <exclude>META-INF/*.SF</exclude>
                                         <exclude>META-INF/*.DSA</exclude>
                                         <exclude>META-INF/*.RSA</exclude>
-                                        <exclude>META-INF/MANIFEST.MF</exclude>
+                                        <exclude>module-info.class</exclude>
+                                        <exclude>META-INF/versions/*/module-info.class</exclude>
                                     </excludes>
                                 </filter>
                             </filters>

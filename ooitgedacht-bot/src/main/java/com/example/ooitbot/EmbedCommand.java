@@ -1,4 +1,4 @@
-package com.example.discordbot;
+package com.example.ooitbot;
 
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.entities.MessageEmbed;
@@ -29,9 +29,9 @@ class EmbedCommand {
     private static final int DEFAULT_COLOR = 0x5865F2;
     private static final String MODAL_PREFIX = "embed";
 
-    private final DiscordBot bot;
+    private final Bot bot;
 
-    EmbedCommand(DiscordBot bot) {
+    EmbedCommand(Bot bot) {
         this.bot = bot;
     }
 
@@ -126,7 +126,7 @@ class EmbedCommand {
         String[] parts = event.getModalId().split(":");
         if (!parts[0].equals(MODAL_PREFIX) || parts.length < 3) return false;
 
-        if (!bot.isDiscordStaff(event.getMember())) {
+        if (!bot.isStaff(event.getMember())) {
             event.reply(":x: Alleen de eigenaar en beheerders mogen dit.").setEphemeral(true).queue();
             return true;
         }

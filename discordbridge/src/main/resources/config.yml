@@ -1,0 +1,70 @@
+# DiscordBridge configuratie
+#
+# Deze plugin praat NIET zelf met Discord. Hij verzamelt logs/chat en voert
+# beheer-acties uit; de losse "OoitGedacht Bot" (24/7 in een eigen AMP-instance)
+# haalt alles via RCON op. Discord-instellingen (token, kanalen, rollen, pings)
+# staan daarom in de config.yml van de bot, niet hier.
+
+logs:
+  server-start: true
+  join: true
+  leave: true
+  death: true
+  # Alle in-game chat (komt in het chat-kanaal van de bot).
+  chat: true
+  # /report-meldingen (van de StaffTools-plugin).
+  reports: true
+  # Logt wie vanuit Discord een /msg, /kick, /ban of /unban deed.
+  discord-actions: true
+  # Gamemode-wissels (bv. survival -> creative), met de oorzaak erbij.
+  gamemode-changes: true
+  # Items die iemand uit het creative-menu pakt. Dit gaat ook af bij gewoon
+  # items verschuiven in creative, dus per speler + item maar 1x per X seconden.
+  creative-items: true
+  creative-items-cooldown-seconds: 30
+  # Vanilla's "moved too quickly!"-waarschuwing (komt door lag, of door een
+  # fly/speed-hack). Per speler maar 1x per X seconden, tegen spam.
+  moved-too-quickly: true
+  moved-too-quickly-cooldown-seconds: 30
+  # Ook "moved wrongly!" loggen. Komt vaak voor bij gewone lag, dus standaard uit.
+  moved-wrongly: false
+  # Logt wie de commando's hieronder gebruikt (spelers én console), zodat je
+  # bv. bij /give ziet wie welke items heeft gespawnd.
+  commands: true
+  watched-commands:
+    - give
+    - item
+    - i
+    - gamemode
+    - gm
+    - gmc
+    - gms
+    - gma
+    - gmsp
+    - op
+    - deop
+    - summon
+    - enchant
+    - effect
+    - xp
+    - experience
+
+messages:
+  # Wat de speler in-game ziet bij /msg vanuit Discord. {discord} = Discord-naam van de afzender.
+  msg-prefix: "&9[Discord] &b{discord}&7: &r"
+  # Kick-scherm. {reason} = de opgegeven reden. \n = nieuwe regel.
+  kick-message: "&cJe bent gekickt door beheer.\n&7Reden: &f{reason}"
+  # Kick-scherm op het moment van de ban (daarna toont Minecraft zelf het ban-scherm).
+  ban-message: "&cJe bent verbannen van de server.\n&7Reden: &f{reason}"
+  # Reden als er in Discord geen reden is ingevuld.
+  default-reason: "Geen reden opgegeven"
+
+discord-command:
+  # Link die spelers krijgen met /discord in-game. Maak er een in Discord:
+  # rechtermuisklik op je server -> "Mensen uitnodigen" -> "Uitnodigingslink
+  # bewerken" -> "Verloopt na: Nooit".
+  invite-link: ""
+  # Wat de speler ziet. {link} = de link. Het hele bericht is klikbaar.
+  message: "&9&lDiscord: &b&n{link}"
+  # Tekst als je met je muis over het bericht gaat.
+  hover: "&7Klik om onze Discord te openen"

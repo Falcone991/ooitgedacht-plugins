@@ -1,4 +1,4 @@
-package com.example.discordbot;
+package com.example.discordbridge;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.core.LogEvent;
@@ -22,7 +22,7 @@ class MoveWarningWatcher extends AbstractAppender {
     private final boolean includeMovedWrongly;
 
     MoveWarningWatcher(Consumer<String> onWarning, boolean includeMovedWrongly) {
-        super("DiscordBotMoveWatcher", null, null, true, Property.EMPTY_ARRAY);
+        super("DiscordBridgeMoveWatcher", null, null, true, Property.EMPTY_ARRAY);
         this.onWarning = onWarning;
         this.includeMovedWrongly = includeMovedWrongly;
     }

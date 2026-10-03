@@ -1,0 +1,103 @@
+# OoitGedacht Bot configuratie
+#
+# Deze bot draait los van de Minecraft-server (eigen AMP-instance), zodat hij
+# 24/7 online blijft, ook als AMP de server laat slapen. Hij praat met de
+# server via RCON; op de server moet de DiscordBridge-plugin staan.
+#
+# Na het aanpassen: de bot-instance in AMP herstarten.
+
+bot:
+  # Bot-token uit het Discord Developer Portal (tabblad "Bot" -> "Reset Token").
+  # DEEL DEZE NOOIT: met de token kan iedereen je bot overnemen.
+  token: ""
+  # ID van je Discord-server (rechtermuisklik op de servernaam -> "Server-ID kopiëren").
+  guild-id: ""
+  # Kanaal-ID's (rechtermuisklik op kanaal -> "Kanaal-ID kopiëren").
+  log-channel-id: ""
+  # In-game chat. Leeg = chat gaat ook naar het log-kanaal.
+  chat-channel-id: ""
+  # Kanaal met het live statusbericht.
+  status-channel-id: ""
+  # Optioneel: ID van een rol die óók /msg, /kick, /ban, /unban en /embed mag gebruiken.
+  # Leeg = alleen de eigenaar en mensen met de Administrator-permissie.
+  # Let op: als je hier een rol invult, zien álle leden de beheer-commando's in de
+  # lijst staan (gebruiken lukt alleen met de juiste rol).
+  staff-role-id: ""
+  # ID van de rol die gepingd wordt bij belangrijke logs (zie logs.ping-on). Leeg = nooit pingen.
+  alert-role-id: ""
+  # Kleine tekst onderaan elke embed (naast het tijdstip). Leeg = geen tekst.
+  embed-footer: "OoitGedacht SMP"
+
+server:
+  # RCON van de Minecraft-server. Zet RCON aan in de instellingen van je
+  # Minecraft-instance (enable-rcon, rcon.port, rcon.password in server.properties).
+  # Draaien bot en server in dezelfde AMP, dan is host meestal 127.0.0.1.
+  rcon-host: "127.0.0.1"
+  rcon-port: 25575
+  rcon-password: ""
+  # Hoe vaak (seconden) de bot nieuwe logs ophaalt als de server wakker is.
+  poll-interval-seconds: 2
+  # Hoe vaak (seconden) de bot kijkt of de server weer wakker is.
+  offline-check-seconds: 10
+
+status:
+  # Wat er onder de naam van de bot staat. Opties: WATCHING ("Kijkt naar ..."),
+  # PLAYING ("Speelt ..."), CUSTOM (alleen je eigen tekst).
+  type: WATCHING
+  # Plekhouders: {online} {max}
+  text: "{online}/{max} spelers op OoitGedacht"
+  text-empty: "een lege server"
+  # Als de server slaapt (de bot staat dan ook op "afwezig", het maantje).
+  text-sleeping: "\U0001F4A4 Server slaapt — join om te wekken"
+
+status-message:
+  # Eén vast bericht in het status-kanaal dat steeds wordt bijgewerkt.
+  # Verwijder je het bericht, dan plaatst de bot vanzelf een nieuw.
+  enabled: true
+  update-interval-seconds: 60
+  title: "OoitGedacht SMP — Serverstatus"
+  description: "Live overzicht van de server. Wordt elke minuut bijgewerkt."
+  # Optioneel: server-adres dat in het bericht getoond wordt, bv. "play.ooitgedacht.nl".
+  server-address: ""
+  # Wat er staat als de server slaapt. \n = nieuwe regel.
+  offline-text: "**Status:** :zzz: Slaapt\nEr was niemand online. Join de server om hem wakker te maken (duurt even)."
+
+logs:
+  # Titel van de log als de server in slaap gaat of stopt.
+  stop-message: ":zzz: Server slaapt / gestopt"
+  # Bij welke soorten logs de alert-rol gepingd wordt. Mogelijk:
+  #   reports, moved-too-quickly, moved-wrongly, gamemode-changes, creative-items, commands
+  ping-on:
+    - reports
+    - moved-too-quickly
+  # Per soort + speler hooguit één ping per zoveel seconden (de log zelf komt
+  # er wel altijd door). Voorkomt dat één laggende speler iedereen spamt.
+  ping-cooldown-seconds: 120
+
+fun:
+  # /deaths, /streak, /streaks, /goldnugget, /coppernugget, /ironnugget
+  enabled: true
+  # Tijdzone voor /streak: een nieuwe dag begint om middernacht in deze zone.
+  timezone: "Europe/Amsterdam"
+  # Hoeveel plekken /deaths en /streaks laten zien (3 t/m 25).
+  leaderboard-size: 10
+
+  # Zelfde spelletjes als de FunItems-plugin in-game. Houd deze teksten gelijk
+  # aan plugins/FunItems/config.yml als je daar iets verandert.
+  gold-coinflip:
+    enabled: true
+    cooldown-seconds: 1
+    heads-message: "&6&lKop! &f\U0001FA99"
+    tails-message: "&6&lMunt! &f\U0001FA99"
+  copper-rps:
+    enabled: true
+    cooldown-seconds: 1
+    win-message: "&aJij: {you} vs Server: {opponent} &2-> Gewonnen!"
+    lose-message: "&cJij: {you} vs Server: {opponent} &4-> Verloren!"
+    draw-message: "&eJij: {you} vs Server: {opponent} &6-> Gelijkspel!"
+  iron-gamble:
+    enabled: true
+    cooldown-seconds: 3
+    win-chance-out-of: 10
+    win-message: "&a&lJACKPOT! &fJe hebt de 1-op-10 kans gewonnen!"
+    lose-message: "&7Helaas, geen geluk deze keer. (1 op de 10 kans)"
