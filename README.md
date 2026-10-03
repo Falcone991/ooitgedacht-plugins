@@ -1,6 +1,6 @@
 # OoitGedacht SMP — plugins overzicht
 
-Gemaakt met behulp van CLAUD AI
+Gemaakt met behulp van CLaud ai
 
 Zes losse Paper-plugins plus een losse Discord-bot, elk een eigen Maven-project (eigen
 `pom.xml`). Bouwen gaat overal hetzelfde: `cd <map>` dan `mvn package`, de jar komt in
