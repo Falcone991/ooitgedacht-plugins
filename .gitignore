@@ -1,0 +1,16 @@
+# Maven build-output (jars, .class-bestanden)
+target/
+
+# Runtime-data / lokale configs met mogelijk geheimen (bv. bot-token)
+data.yml
+*.local.yml
+
+# IDE / OS
+.idea/
+*.iml
+.vscode/
+.classpath
+.project
+.settings/
+.DS_Store
+Thumbs.db

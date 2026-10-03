@@ -1,0 +1,34 @@
+# StaffTools configuratie
+#
+# "Beheer" = iedereen met de permissie stafftools.staff. OP's krijgen die
+# automatisch (staat standaard op "op" in plugin.yml). Gebruik je later
+# een permissie-plugin zoals LuckPerms, dan kan je deze permissie ook aan
+# niet-OP's geven om ze toch als beheer te laten tellen.
+
+staff:
+  # Tekst die vóór de naam van beheer-leden komt, in zowel de tab-lijst
+  # als in de chat. Gebruik & voor kleurcodes.
+  tab-prefix: "&c[Beheer] &r"
+  chat-prefix: "&c[Beheer] &r"
+  # Hoe vaak (in ticks, 20 = 1 seconde) opnieuw gecontroleerd wordt wie
+  # er OP is, zodat de tab-lijst ook meteen klopt als iemand tijdens het
+  # spelen OP wordt gemaakt of juist niet meer.
+  refresh-interval-ticks: 100
+  # Prefix die de ontvanger ziet bij een /sgm-bericht. Gebruik & voor kleurcodes.
+  sgm-prefix: "&d&l[Beheer] &r"
+  # Speelt een geluidje af bij de ontvanger zodat het bericht opvalt.
+  sgm-sound-enabled: true
+
+discord:
+  # Maak in Discord een webhook aan: Kanaalinstellingen -> Integraties ->
+  # Webhooks -> Nieuwe webhook -> kopieer de URL hierheen. Leeg laten
+  # schakelt alle Discord-logging uit.
+  webhook-url: ""
+  # Naam waaronder de berichten in Discord verschijnen.
+  username: "OoitGedacht SMP"
+  log-join: true
+  log-leave: true
+  log-reports: true
+  # /sgm-berichten zijn bedoeld als priv\u00e9gesprek, dus standaard NIET
+  # gelogd naar Discord. Zet op true als je toch een archief wil.
+  log-sgm: false

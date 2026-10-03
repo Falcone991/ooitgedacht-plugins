@@ -1,0 +1,19 @@
+name: SurvivalTimeline
+version: '1.0.0'
+main: com.example.survivaltimeline.SurvivalTimeline
+api-version: '1.21'
+author: Claude
+description: Fasegewijze survival timeline - respawn periode, nether-lock, groeiende wereldgrens.
+
+commands:
+  survivaltimeline:
+    description: Toon de status van de survival-timeline.
+    usage: /survivaltimeline
+    aliases: [stimeline]
+    permission: survivaltimeline.status
+    permission-message: Je hebt geen rechten om dit commando te gebruiken.
+
+permissions:
+  survivaltimeline.status:
+    description: Mag de timeline-status bekijken.
+    default: true

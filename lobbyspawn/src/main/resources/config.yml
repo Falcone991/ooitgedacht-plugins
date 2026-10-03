@@ -1,0 +1,105 @@
+# LobbySpawn configuratie
+# Deze waarden worden automatisch bijgewerkt als je /setlobby of
+# /spawnprotection gebruikt. Je hoeft dit bestand normaal niet handmatig
+# te bewerken.
+
+lobby:
+  # Wordt automatisch true zodra iemand /setlobby heeft gebruikt.
+  set: false
+  world: ""
+  x: 0.5
+  y: 64.0
+  z: 0.5
+  yaw: 0.0
+  pitch: 0.0
+  # Aantal seconden dat een speler stil moet staan voordat /lobby werkt.
+  # Beweeg je of krijg je schade tijdens het wachten, dan wordt de
+  # teleport geannuleerd. Zet op 0 om de warmup uit te schakelen.
+  warmup-seconds: 3
+  # Aantal seconden dat een speler moet wachten voordat /lobby weer
+  # gebruikt mag worden, na een geslaagde teleport. Zet op 0 om uit
+  # te schakelen.
+  cooldown-seconds: 30
+
+# Instellingen specifiek voor /spawn (teleporteert naar het spawnpunt van
+# de survival-wereld, los van de aparte lobby). Zelfde warmup/cooldown-
+# gedrag als /lobby, maar apart instelbaar.
+spawn-command:
+  warmup-seconds: 3
+  cooldown-seconds: 15
+
+build-protection:
+  # Vervangt de vanilla Engelse "X, Y, Z is under spawn protection".
+  # Zorg dat je spawn-protection in server.properties op 0 zet, anders
+  # kan de vanilla-versie soms nog tussendoor komen.
+  enabled: true
+  # Straal in blokken rond het wereld-spawnpunt waarbinnen spelers zonder
+  # de lobbyspawn.admin-permissie geen blokken mogen breken of plaatsen.
+  radius: 16
+  # Bericht dat de speler te zien krijgt, als actionbar-melding (midden-
+  # onderin het scherm, net als de vanilla-versie). Gebruik & voor kleurcodes.
+  message: "&cDeze plek valt binnen de spawn-bescherming. Je mag hier niet bouwen of afbreken."
+  # Speelt een note block "pling"-geluidje af bij elke geblokkeerde poging.
+  sound-enabled: true
+  # Blokkeert ook het GEBRUIKEN van deuren, poortjes, luiken, knoppen,
+  # hendels en drukplaten binnen dezelfde straal (niet alleen breken/
+  # plaatsen). Kisten en andere opslag worden hier NIET door geraakt.
+  block-interactions: true
+
+hub:
+  # Zet op true zodra je lobby-wereld klaar staat: iedereen komt dan bij
+  # het inloggen ALTIJD eerst in de lobby terecht (ook terugkerende
+  # spelers), en gebruikt /survival om terug te gaan naar precies waar
+  # hij/zij gebleven was.
+  enabled: false
+  # Naam van je survival-wereld (waar /survival naartoe stuurt als er nog
+  # geen eerdere locatie bekend is, bv. voor een gloednieuwe speler).
+  # Leeg laten = automatisch de eerst geladen wereld gebruiken.
+  survival-world: ""
+
+world-spawn:
+  # Zorgt ervoor dat spelers ALTIJD exact op het wereld-spawnpunt
+  # terechtkomen (bij hun eerste keer inloggen én bij respawnen zonder
+  # bed/anker), in plaats van willekeurig verspreid eromheen zoals
+  # vanilla Minecraft standaard doet.
+  force-exact-spawn: true
+
+spawn-protection:
+  # Zet op false om de mob-spawnbescherming helemaal uit te schakelen.
+  enabled: true
+  # Straal in blokken rond het wereld-spawnpunt waarbinnen geen
+  # vijandige mobs (zombies, skeletons, creepers, etc.) mogen spawnen.
+  # Passieve dieren (koeien, kippen, etc.) worden hier niet door geraakt.
+  radius: 100
+
+# Welkomstbericht dat een speler krijgt bij zijn/haar ALLEREERSTE keer
+# inloggen op de server (gebaseerd op hasPlayedBefore, dus komt maar
+# één keer per speler vanzelf). Kan ook altijd handmatig opgevraagd
+# worden met /rules. Gebruik &-kleurcodes (bv. &e = geel, &l = vet).
+# Elke regel in de lijst wordt als aparte chatregel verstuurd.
+welcome-message:
+  enabled: true
+  # Vertraging in ticks (20 = 1 seconde) voordat het bericht verschijnt
+  # na het inloggen, zodat het niet wegvalt tussen andere join-berichten.
+  delay-ticks: 20
+  lines:
+    - "&6&l=========================================="
+    - "&e&lWelkom op de OoitGedacht SMP!"
+    - "&6&l=========================================="
+    - "&7"
+    - "&fDeze server draait volgens een tijdlijn:"
+    - "&7 - De eerste 3 weken: normale respawns"
+    - "&7 - Vanaf week 2: de Nether gaat open"
+    - "&7 - Vanaf week 3: het End gaat open"
+    - "&7 - Na 3 weken: &cHARDCORE &7- sterven is dan definitief"
+    - "&7"
+    - "&fDe wereldgrens groeit automatisch elke in-game dag."
+    - "&fWe spelen op een custom wereld, respecteer elkaars bouwwerken."
+    - "&7"
+    - "&fHandige commando's:"
+    - "&7 - &e/survivaltimeline &7- bekijk hoeveel tijd er nog is"
+    - "&7 - &e/lobby &7- teleporteer naar de lobby"
+    - "&7 - &e/rules &7- lees dit bericht nog een keer terug"
+    - "&7"
+    - "&fVeel plezier en succes!"
+    - "&6&l=========================================="

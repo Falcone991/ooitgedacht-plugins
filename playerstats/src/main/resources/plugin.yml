@@ -1,0 +1,21 @@
+name: PlayerStats
+version: '1.0.0'
+main: com.example.playerstats.PlayerStats
+api-version: '1.21'
+author: Claude
+description: Klein scorebord (speeltijd, doden) + basic level-systeem voor mijnen, boeren, vissen en verkennen.
+
+commands:
+  scoreboard:
+    description: Zet je eigen scorebord aan of uit.
+    usage: /scoreboard
+    permission: playerstats.use
+  levels:
+    description: Bekijk je voortgang per categorie (mijnen/boeren/vissen/verkennen).
+    usage: /levels
+    permission: playerstats.use
+
+permissions:
+  playerstats.use:
+    description: Mag /scoreboard en /levels gebruiken.
+    default: true

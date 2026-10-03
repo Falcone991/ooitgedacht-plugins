@@ -1,0 +1,11 @@
+name: FunItems
+version: '1.0.0'
+main: com.example.funitems.FunItems
+api-version: '1.21'
+author: Claude
+description: Leuke rechtermuisklik-spelletjes met nuggets - goud (kop of munt), koper (steen/papier/schaar), ijzer (1 op 10 gok).
+
+permissions:
+  funitems.use:
+    description: Mag de nugget-spelletjes gebruiken.
+    default: true

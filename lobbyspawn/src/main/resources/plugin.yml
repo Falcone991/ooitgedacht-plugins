@@ -1,0 +1,47 @@
+name: LobbySpawn
+version: '1.0.0'
+main: com.example.lobbyspawn.LobbySpawn
+api-version: '1.21'
+author: Claude
+description: Simpele /lobby plugin met exacte spawn-locatie en mob-spawnbescherming rond het wereld-spawnpunt.
+
+commands:
+  lobby:
+    description: Teleporteer naar de lobby.
+    usage: /lobby
+    permission: lobbyspawn.use
+  spawn:
+    description: Teleporteer naar het spawnpunt van de survival-wereld.
+    usage: /spawn
+    permission: lobbyspawn.use
+  setlobby:
+    description: Stel de lobby-locatie in op je huidige positie.
+    usage: /setlobby
+    permission: lobbyspawn.admin
+  spawnprotection:
+    description: Stel de straal van de spawn-mobbescherming in.
+    usage: /spawnprotection <blokken>
+    permission: lobbyspawn.admin
+  buildprotection:
+    description: Stel de straal in waarbinnen niemand (behalve admins) mag bouwen/afbreken bij spawn.
+    usage: /buildprotection <blokken>
+    permission: lobbyspawn.admin
+  rules:
+    description: Toon het welkomst-/regelsbericht opnieuw.
+    usage: /rules
+    permission: lobbyspawn.use
+  survival:
+    description: Teleporteer terug naar je laatste survival-locatie.
+    usage: /survival
+    permission: lobbyspawn.use
+
+permissions:
+  lobbyspawn.use:
+    description: Mag /lobby gebruiken.
+    default: true
+  lobbyspawn.admin:
+    description: Mag de lobby-locatie en spawnbescherming instellen.
+    default: op
+  lobbyspawn.bypassdelay:
+    description: Teleporteert altijd instant, zonder warmup of cooldown.
+    default: op

@@ -1,0 +1,54 @@
+# PlayerStats configuratie
+
+scoreboard:
+  # Staat het scorebord standaard aan voor nieuwe spelers?
+  enabled-by-default: true
+  # Titel bovenaan het scorebord. Gebruik & voor kleurcodes.
+  title: "&6&lServer Stats"
+  # Hoe vaak het scorebord ververst wordt (in ticks, 20 = 1 seconde).
+  update-interval-ticks: 40
+  # De regels van het scorebord, van boven naar beneden. Gebruik & voor
+  # kleurcodes en deze plekhouders:
+  #   {hours} {minutes}  - speeltijd
+  #   {deaths}           - aantal doden
+  #   {level}            - totaal level (som van alle 4 categorieën)
+  #   {mining_level} {farming_level} {fishing_level} {exploring_level}
+  lines:
+    - "&7Speeltijd: &f{hours}u {minutes}m"
+    - "&7Doden: &f{deaths}"
+    - "&7Level: &f{level}"
+
+# Het level-systeem is heel basic: elke categorie heeft zijn eigen XP-
+# teller, en elke "xp-per-level" punten levert 1 level op in die
+# categorie. Bij elk level-up krijgt de speler wat normale Minecraft-XP
+# als beloning (via giveExp, dus gewoon bruikbaar voor enchanten etc.).
+leveling:
+  xp-per-level: 100
+  xp-reward-per-level: 25
+  points:
+    # +1 puntje mijnbouw-XP per gebroken erts (kolen t/m ancient debris,
+    # zowel steen- als dieptegesteente-varianten).
+    mining-per-ore: 1
+    # +1 puntje boeren-XP per volgroeid gewas dat je oogst (tarwe,
+    # wortels, aardappels, bieten, nether wart, cacao, zoete bessen).
+    farming-per-crop: 1
+    # +1 puntje vis-XP per succesvolle vangst (vis, troep of schat).
+    fishing-per-catch: 1
+    # +1 puntje verken-XP per zoveel blokken die je lopend/rennend aflegt.
+    exploring-per-blocks: 50
+
+  # Wat er gebeurt bij een level-up: een titel in beeld, een geluidje en
+  # wat feestelijke deeltjes om de speler heen.
+  level-up:
+    title: "&a&lLEVEL UP!"
+    # {category} = de naam van de categorie (Mijnen/Boeren/Vissen/Verkennen), {level} = het nieuwe level.
+    subtitle: "&f{category} level {level}"
+    # Geldige waarden: elk item uit de Bukkit Sound-enum, bv. ENTITY_PLAYER_LEVELUP,
+    # UI_TOAST_CHALLENGE_COMPLETE, ENTITY_EXPERIENCE_ORB_PICKUP.
+    sound: ENTITY_PLAYER_LEVELUP
+    sound-volume: 1.0
+    sound-pitch: 1.0
+    # Geldige waarden: elk item uit de Bukkit Particle-enum, bv. TOTEM_OF_UNDYING,
+    # FIREWORKS_SPARK, VILLAGER_HAPPY, END_ROD.
+    particle: TOTEM_OF_UNDYING
+    particle-count: 30

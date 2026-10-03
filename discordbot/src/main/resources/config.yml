@@ -1,0 +1,135 @@
+# DiscordBot configuratie
+#
+# Stappenplan om de token en ID's te krijgen staat in de README.md in de
+# hoofdmap. Na het aanpassen: server herstarten.
+
+bot:
+  # Bot-token uit het Discord Developer Portal (tabblad "Bot" -> "Reset Token").
+  # DEEL DEZE NOOIT: met de token kan iedereen je bot overnemen. Uitgelekt?
+  # Meteen opnieuw resetten in het Developer Portal.
+  token: ""
+  # ID van je Discord-server (rechtermuisklik op de servernaam -> "Server-ID kopiëren").
+  guild-id: ""
+  # ID van het kanaal waar de logs in komen (rechtermuisklik op kanaal -> "Kanaal-ID kopiëren").
+  log-channel-id: ""
+  # ID van het kanaal voor de in-game chat. Leeg = chat gaat ook naar het log-kanaal.
+  chat-channel-id: ""
+  # ID van het kanaal voor het live statusbericht (zie status-message hieronder).
+  status-channel-id: ""
+  # Kleine tekst onderaan elke embed (naast het tijdstip). Leeg = geen tekst.
+  embed-footer: "OoitGedacht SMP"
+  # ID van de rol die gepingd wordt bij belangrijke logs (zie logs.ping-on).
+  # Leeg = nooit pingen. Rol-ID: Serverinstellingen -> Rollen -> rechtermuisklik -> "Rol-ID kopiëren".
+  alert-role-id: ""
+  # Optioneel: ID van een rol die óók /msg, /kick, /ban en /unban mag gebruiken.
+  # Leeg = alleen de eigenaar en mensen met de Administrator-permissie.
+  # Let op: als je hier een rol invult, zien álle Discord-leden de commando's
+  # in de lijst staan (gebruiken lukt alleen met de juiste rol).
+  staff-role-id: ""
+
+status:
+  # Wat er onder de naam van de bot staat. Opties:
+  #   WATCHING -> "Kijkt naar ..."
+  #   PLAYING  -> "Speelt ..."
+  #   CUSTOM   -> alleen je eigen tekst
+  type: WATCHING
+  # Plekhouders: {online} {max}
+  text: "{online}/{max} spelers op OoitGedacht"
+  # Tekst als er niemand online is.
+  text-empty: "een lege server"
+
+status-message:
+  # Eén vast bericht in het status-kanaal dat steeds wordt bijgewerkt: online/offline,
+  # spelers, TPS, hoe lang de server al draait en de fase van SurvivalTimeline.
+  # Verwijder je het bericht, dan plaatst de bot vanzelf een nieuw.
+  enabled: true
+  # Hoe vaak het bericht wordt bijgewerkt (minimaal 15). Aftellers ("over 3 dagen")
+  # lopen in Discord zelf live door, ook tussen updates.
+  update-interval-seconds: 60
+  title: "OoitGedacht SMP — Serverstatus"
+  description: "Live overzicht van de server. Wordt elke minuut bijgewerkt."
+  # Optioneel: server-adres dat in het bericht getoond wordt, bv. "play.ooitgedacht.nl".
+  server-address: ""
+
+logs:
+  # Bij welke soorten logs de alert-rol (bot.alert-role-id) gepingd wordt. Mogelijk:
+  #   reports, moved-too-quickly, moved-wrongly, gamemode-changes, creative-items, commands
+  ping-on:
+    - reports
+    - moved-too-quickly
+  # Per soort + speler hooguit één ping per zoveel seconden (de log zelf komt
+  # er wel altijd door). Voorkomt dat één laggende speler iedereen spamt.
+  ping-cooldown-seconds: 120
+
+  server-start-stop: true
+  join: true
+  leave: true
+  death: true
+  # Alle in-game chat naar het chat-kanaal (bot.chat-channel-id).
+  chat: true
+  # /report-meldingen (van de StaffTools-plugin).
+  reports: true
+  # Logt wie vanuit Discord een /msg, /kick, /ban of /unban deed.
+  discord-actions: true
+  # Gamemode-wissels (bv. survival -> creative), met de oorzaak erbij.
+  gamemode-changes: true
+  # Items die iemand uit het creative-menu pakt. Dit gaat ook af bij gewoon
+  # items verschuiven in creative, dus per speler + item maar 1x per X seconden.
+  creative-items: true
+  creative-items-cooldown-seconds: 30
+  # Vanilla's "moved too quickly!"-waarschuwing (komt door lag, of door een
+  # fly/speed-hack). Per speler maar 1x per X seconden, tegen spam.
+  moved-too-quickly: true
+  moved-too-quickly-cooldown-seconds: 30
+  # Ook "moved wrongly!" loggen. Komt vaak voor bij gewone lag, dus standaard uit.
+  moved-wrongly: false
+  # Logt wie de commando's hieronder gebruikt (spelers én console), zodat je
+  # bv. bij /give ziet wie welke items heeft gespawnd.
+  commands: true
+  watched-commands:
+    - give
+    - item
+    - i
+    - gamemode
+    - gm
+    - gmc
+    - gms
+    - gma
+    - gmsp
+    - op
+    - deop
+    - summon
+    - enchant
+    - effect
+    - xp
+    - experience
+
+fun:
+  # Discord-commando's voor iedereen: /deaths, /streak, /streaks, /goldnugget,
+  # /coppernugget, /ironnugget. De nugget-spelletjes gebruiken de teksten,
+  # kansen en cooldowns uit de config van de FunItems-plugin.
+  enabled: true
+  # Tijdzone voor /streak: een nieuwe dag begint om middernacht in deze zone.
+  timezone: "Europe/Amsterdam"
+  # Hoeveel plekken /deaths en /streaks laten zien (3 t/m 25).
+  leaderboard-size: 10
+
+discord-command:
+  # Link die spelers krijgen met /discord in-game. Maak er een in Discord:
+  # rechtermuisklik op je server -> "Mensen uitnodigen" -> "Uitnodigingslink
+  # bewerken" -> "Verloopt na: Nooit".
+  invite-link: ""
+  # Wat de speler ziet. {link} = de link. Het hele bericht is klikbaar.
+  message: "&9&lDiscord: &b&n{link}"
+  # Tekst als je met je muis over het bericht gaat.
+  hover: "&7Klik om onze Discord te openen"
+
+messages:
+  # Wat de speler in-game ziet bij /msg vanuit Discord. {discord} = Discord-naam van de afzender.
+  msg-prefix: "&9[Discord] &b{discord}&7: &r"
+  # Kick-scherm. {reason} = de opgegeven reden. \n = nieuwe regel.
+  kick-message: "&cJe bent gekickt door beheer.\n&7Reden: &f{reason}"
+  # Kick-scherm op het moment van de ban (daarna toont Minecraft zelf het ban-scherm).
+  ban-message: "&cJe bent verbannen van de server.\n&7Reden: &f{reason}"
+  # Reden als er in Discord geen reden is ingevuld.
+  default-reason: "Geen reden opgegeven"

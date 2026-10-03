@@ -1,0 +1,33 @@
+# SurvivalTimeline configuratie
+# Alle "weken" hieronder zijn ECHTE weken (real life), gerekend vanaf het
+# allereerste moment dat deze plugin op de server werd gestart.
+
+# Na hoeveel weken (real life) de server omschakelt naar hardcore.
+# Vóór deze tijd: normaal respawnen. Erna: sterven = permanent (spectator).
+weeks-before-hardcore: 3
+
+# In welke week (real life) de Nether opengaat. Portalen naar de Nether
+# worden tot die tijd geblokkeerd. "Week 2" = het BEGIN van de tweede week,
+# dus 7 dagen na de start (week 1 loopt van dag 0 t/m 6).
+nether-open-week: 2
+
+# In welke week (real life) het End opengaat. Portalen naar het End
+# worden tot die tijd geblokkeerd. "Week 3" = 14 dagen na de start.
+end-open-week: 3
+
+# Met hoeveel blokken de diameter van de wereldgrens groeit per in-game dag
+# (1 in-game dag = 24000 ticks, dus ongeveer 20 echte minuten bij normale snelheid).
+border-increment-per-ingame-day: 2.0
+
+# De beginwaarde van de wereldgrens (diameter) wanneer de plugin voor het
+# eerst wordt gestart. Wordt genegeerd als de grens al eerder is ingesteld.
+border-start-size: 200.0
+
+# Naam van de hoofdwereld waarvan de in-game dag geteld wordt en waarvan
+# de wereldgrens wordt aangepast. Leeg laten = automatisch de eerste
+# geladen wereld gebruiken (meestal je overworld).
+main-world: ""
+
+# Zet aankondigingen (broadcasts) aan/uit voor belangrijke momenten
+# (nether open, hardcore geactiveerd, wereldgrens gegroeid).
+announce: true

@@ -1,0 +1,36 @@
+# FunItems configuratie
+# Rechtermuisklik met het item in je hand (geen commando's nodig).
+
+gold-coinflip:
+  enabled: true
+  cooldown-seconds: 1
+  heads-message: "&6&lKop! &f\uD83E\uDE99"
+  tails-message: "&6&lMunt! &f\uD83E\uDE99"
+  sound: ENTITY_EXPERIENCE_ORB_PICKUP
+  sound-volume: 0.5
+  sound-pitch: 1.5
+
+copper-rps:
+  enabled: true
+  cooldown-seconds: 1
+  # {you} = jouw keuze, {result} = steen/papier/schaar
+  win-message: "&aJij: {you} vs Server: {opponent} &2-> Gewonnen!"
+  lose-message: "&cJij: {you} vs Server: {opponent} &4-> Verloren!"
+  draw-message: "&eJij: {you} vs Server: {opponent} &6-> Gelijkspel!"
+  win-sound: ENTITY_PLAYER_LEVELUP
+  lose-sound: ENTITY_VILLAGER_NO
+  draw-sound: UI_BUTTON_CLICK
+
+iron-gamble:
+  enabled: true
+  cooldown-seconds: 3
+  # 1 op de "win-chance-out-of" kans om te winnen.
+  win-chance-out-of: 10
+  win-message: "&a&lJACKPOT! &fJe hebt de 1-op-10 kans gewonnen!"
+  lose-message: "&7Helaas, geen geluk deze keer. (1 op de 10 kans)"
+  # Beloning bij winst: normale Minecraft-XP (bruikbaar voor enchanten).
+  win-xp-reward: 50
+  win-sound: UI_TOAST_CHALLENGE_COMPLETE
+  win-particle: FIREWORK
+  win-particle-count: 40
+  lose-sound: ENTITY_VILLAGER_NO
