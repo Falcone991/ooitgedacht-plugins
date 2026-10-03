@@ -1,5 +1,7 @@
 # OoitGedacht SMP — plugins overzicht
 
+Gemaakt met behulp van CLAUD AI
+
 Zes losse Paper-plugins, elk een eigen Maven-project (eigen `pom.xml`). Bouwen gaat overal
 hetzelfde: `cd <map>` dan `mvn package`, de jar komt in `<map>/target/<naam>.jar`.
 
