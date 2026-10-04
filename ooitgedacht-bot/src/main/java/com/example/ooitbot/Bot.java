@@ -85,6 +85,7 @@ final class Bot extends ListenerAdapter implements ServerLink.Callbacks {
     private final GameCommands gameCommands;
     private final FunCommands funCommands;
     private final EmbedCommand embedCommand;
+    private final GitHubFeed gitHubFeed;
 
     private volatile String lastPresence;
     private volatile boolean statusMessageSending;
@@ -145,6 +146,17 @@ final class Bot extends ListenerAdapter implements ServerLink.Callbacks {
             funCommands = null;
         }
 
+        if (config.bool("github.enabled", false)) {
+            gitHubFeed = new GitHubFeed(this,
+                    config.id("github.channel-id"),
+                    config.id("github.repo"),
+                    config.text("github.branch", "main").trim(),
+                    config.id("github.token"),
+                    Math.max(30, config.integer("github.check-interval-seconds", 120)));
+        } else {
+            gitHubFeed = null;
+        }
+
         // Bij de allereerste start weten we nog niet sinds wanneer de server slaapt.
         if (data.number("sleeping-since", 0) == 0) data.putNumber("sleeping-since", System.currentTimeMillis());
     }
@@ -168,6 +180,7 @@ final class Bot extends ListenerAdapter implements ServerLink.Callbacks {
             scheduler.scheduleWithFixedDelay(safe("statusbericht", this::refreshStatusMessage),
                     5, statusIntervalSeconds, TimeUnit.SECONDS);
         }
+        if (gitHubFeed != null) gitHubFeed.start();
 
         Runtime.getRuntime().addShutdownHook(new Thread(this::shutdown, "ooitbot-shutdown"));
         Log.info("OoitGedacht Bot draait. Stoppen: de instance in AMP stoppen.");
@@ -177,6 +190,7 @@ final class Bot extends ListenerAdapter implements ServerLink.Callbacks {
         Log.info("Bot wordt afgesloten...");
         scheduler.shutdownNow();
         worker.shutdownNow();
+        if (gitHubFeed != null) gitHubFeed.shutdown();
         rcon.close();
         if (jda != null) {
             jda.shutdown();
@@ -199,7 +213,7 @@ final class Bot extends ListenerAdapter implements ServerLink.Callbacks {
         };
     }
 
-    private static java.util.concurrent.ThreadFactory daemon(String name) {
+    static java.util.concurrent.ThreadFactory daemon(String name) {
         return runnable -> {
             Thread thread = new Thread(runnable, name);
             thread.setDaemon(true);
@@ -397,6 +411,10 @@ final class Bot extends ListenerAdapter implements ServerLink.Callbacks {
         warnIfMissing("Log-kanaal", logChannelId);
         warnIfMissing("Chat-kanaal", chatChannelId);
         warnIfMissing("Status-kanaal", statusChannelId);
+        if (gitHubFeed != null) {
+            if (gitHubFeed.channelId().isEmpty()) Log.warn("github.enabled staat aan, maar github.channel-id is leeg.");
+            else warnIfMissing("GitHub-kanaal", gitHubFeed.channelId());
+        }
     }
 
     private void warnIfMissing(String label, String channelId) {
@@ -471,7 +489,7 @@ final class Bot extends ListenerAdapter implements ServerLink.Callbacks {
         return eb;
     }
 
-    private TextChannel channel(String channelId) {
+    TextChannel channel(String channelId) {
         if (jda == null || channelId.isEmpty()) return null;
         try {
             return jda.getTextChannelById(channelId);

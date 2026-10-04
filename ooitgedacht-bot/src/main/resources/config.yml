@@ -74,6 +74,21 @@ logs:
   # er wel altijd door). Voorkomt dat één laggende speler iedereen spamt.
   ping-cooldown-seconds: 120
 
+github:
+  # Nieuwe commits van een GitHub-repository in een Discord-kanaal plaatsen.
+  enabled: false
+  # Kanaal-ID voor de updates (rechtermuisklik op kanaal -> "Kanaal-ID kopiëren").
+  channel-id: ""
+  # Repository als "eigenaar/naam" en de branch die gevolgd wordt.
+  repo: "Falcone991/ooitgedacht-plugins"
+  branch: "main"
+  # Hoe vaak (seconden) de bot bij GitHub kijkt. Minimaal 30.
+  check-interval-seconds: 120
+  # Optioneel: alleen nodig voor een privé-repository. Een "fine-grained" token
+  # met alleen leesrechten (Contents: Read-only) op die ene repository.
+  # DEEL DEZE NOOIT en zet hem nooit in de GitHub-repo zelf.
+  token: ""
+
 fun:
   # /deaths, /streak, /streaks, /goldnugget, /coppernugget, /ironnugget
   enabled: true

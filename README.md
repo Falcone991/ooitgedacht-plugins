@@ -98,6 +98,9 @@ Wat het doet:
 - **Live statusbericht**: online/slapend, spelers, TPS, uptime, SurvivalTimeline-fase (week,
   hardcore, Nether/End met live aftellers, wereldgrens). Tijdens de slaap blijft de laatst bekende
   tijdlijn staan.
+- **GitHub-updates** (`github:` in de bot-config): nieuwe commits op een branch van deze repo
+  komen als embed in een eigen kanaal (link per commit, auteur met avatar). Kijkt elke 2 minuten
+  via de GitHub-API; geen token nodig voor een publieke repo.
 - **Altijd beschikbaar** (ook als de server slaapt): `/streak`, `/streaks`, `/goldnugget`,
   `/coppernugget [keuze]`, `/ironnugget`, `/embed` (beheer: formulier voor een bericht met
   gekleurde rand; met `bericht-id` bewerk je een eerder bericht).
