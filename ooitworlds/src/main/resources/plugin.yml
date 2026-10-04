@@ -1,0 +1,20 @@
+name: OoitWorlds
+version: '1.0.0'
+main: com.example.ooitworlds.OoitWorlds
+api-version: '1.21'
+author: Claude
+description: Simpele wereldbeheerder (eigen Multiverse) - extra werelden maken/laden, met regels per wereld.
+# Eerst de werelden laden, dan pas de plugins die ernaar verwijzen.
+loadbefore: [LobbySpawn, SurvivalExtras]
+
+commands:
+  world:
+    description: Werelden beheren.
+    usage: /world help
+    aliases: [worlds, ow]
+    permission: ooitworlds.admin
+
+permissions:
+  ooitworlds.admin:
+    description: Mag werelden beheren, en negeert de bouw- en gamemode-regels van een wereld.
+    default: op

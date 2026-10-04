@@ -2,7 +2,7 @@
 
 Gemaakt met behulp van CLaud ai,_
 
-Zeven losse Paper-plugins plus een losse Discord-bot, elk een eigen Maven-project (eigen
+Acht losse Paper-plugins plus een losse Discord-bot, elk een eigen Maven-project (eigen
 `pom.xml`). Bouwen gaat overal hetzelfde: `cd <map>` dan `mvn package`, de jar komt in
 `<map>/target/<naam>.jar`.
 
@@ -80,6 +80,25 @@ Drie losse onderdelen, elk aan/uit te zetten in de config:
 - **Homes**: `/sethome [naam]`, `/home [naam]`, `/delhome <naam>`, `/homes` (klikbaar). Max. 2
   homes, 5 s stilstaan, 30 s cooldown. Geen homes in de lobby-wereld van lobbyspawn.
 - `survivalextras.bypassdelay` (meteen teleporteren) staat voor niemand aan, ook niet voor OP's.
+
+## ooitworlds
+Eigen, simpele "Multiverse": extra werelden (zoals een aparte lobby) maken en laden, met regels
+per wereld. Alles staat in `plugins/OoitWorlds/worlds.yml` en wordt bij elke start vanzelf geladen.
+Alleen voor OP's (`ooitworlds.admin`).
+- `/world create <naam> <void|flat|normal> [normal|nether|end]` — nieuwe wereld (void = leeg, met
+  een klein platform bij de spawn).
+- `/world import <naam> [void|flat|normal]` — geüploade wereldmap laden (los naast `world`, uit
+  een oude of nieuwe Minecraft-versie; Paper zet hem zelf over naar
+  `world/dimensions/minecraft/<naam>`). Voor een lobby: type `void`, dan blijft alles buiten de
+  bouw leeg.
+- `/world tp <naam> [speler]`, `/world list`, `/world setspawn`, `/world load|unload <naam>`.
+- `/world info [naam]` en `/world set <naam> <instelling> <waarde>`: `gamemode`
+  (survival/creative/adventure/geen), en aan/uit: `pvp`, `schade`, `honger`, `mobs`, `bouwen`,
+  `portalen`, `altijd-dag`, `geen-regen`, `void-terug`.
+- `/world preset <naam> lobby` zet alles in één keer goed voor een lobby; `normaal` = vanilla.
+- Gamemode-wissel is hardcore-veilig: de oude gamemode wordt op de speler bewaard en teruggezet
+  bij het verlaten; toeschouwers en OP's worden nooit aangepast.
+- Let op (Minecraft 26+): extra werelden staan binnen de map `world`, onder `dimensions/minecraft/`.
 
 ## funitems
 Leuke rechtermuisklik-spelletjes met nuggets (geen commando's):
