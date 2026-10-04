@@ -1,0 +1,55 @@
+name: SurvivalExtras
+version: '1.0.0'
+main: com.example.survivalextras.SurvivalExtras
+api-version: '1.21'
+author: Claude
+description: Nacht overslaan met minder slapers (met geluidjes), /tpa met wachttijd en maximaal 2 homes.
+
+commands:
+  tpa:
+    description: Vraag of je naar een speler mag teleporteren.
+    usage: /tpa <speler>
+    permission: survivalextras.tpa
+  tpahere:
+    description: Vraag of een speler naar jou toe wil teleporteren.
+    usage: /tpahere <speler>
+    permission: survivalextras.tpa
+  tpaccept:
+    description: Accepteer een teleport-verzoek.
+    usage: /tpaccept [speler]
+    permission: survivalextras.tpa
+  tpdeny:
+    description: Weiger een teleport-verzoek.
+    usage: /tpdeny [speler]
+    permission: survivalextras.tpa
+  tpacancel:
+    description: Trek je eigen teleport-verzoek in.
+    usage: /tpacancel
+    permission: survivalextras.tpa
+  sethome:
+    description: Sla je huidige plek op als home.
+    usage: /sethome [naam]
+    permission: survivalextras.home
+  home:
+    description: Teleporteer naar een van je homes.
+    usage: /home [naam]
+    permission: survivalextras.home
+  delhome:
+    description: Verwijder een home.
+    usage: /delhome <naam>
+    permission: survivalextras.home
+  homes:
+    description: Bekijk je homes.
+    usage: /homes
+    permission: survivalextras.home
+
+permissions:
+  survivalextras.tpa:
+    description: Mag /tpa, /tpahere, /tpaccept, /tpdeny en /tpacancel gebruiken.
+    default: true
+  survivalextras.home:
+    description: Mag /sethome, /home, /delhome en /homes gebruiken.
+    default: true
+  survivalextras.bypassdelay:
+    description: Teleporteert meteen, zonder wachttijd of cooldown. Staat standaard voor NIEMAND aan (ook niet voor OP's).
+    default: false

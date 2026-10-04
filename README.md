@@ -2,7 +2,7 @@
 
 Gemaakt met behulp van CLaud ai,_
 
-Zes losse Paper-plugins plus een losse Discord-bot, elk een eigen Maven-project (eigen
+Zeven losse Paper-plugins plus een losse Discord-bot, elk een eigen Maven-project (eigen
 `pom.xml`). Bouwen gaat overal hetzelfde: `cd <map>` dan `mvn package`, de jar komt in
 `<map>/target/<naam>.jar`.
 
@@ -56,12 +56,30 @@ Klein scorebord + basic level-systeem:
 Beheer-tools:
 - OP's (permissie `stafftools.staff`, default `op`) krijgen automatisch een `[Beheer]`-label
   in zowel de tab-lijst als de chat.
+- `/prefix set <speler> <prefix>` / `/prefix remove <speler>` / `/prefix list` — eigen prefix
+  (met &-kleuren, bv. `&6[VIP]`) in tab, chat en boven het hoofd. Vervangt bij beheer de
+  `[Beheer]`-tag. Werkt ook voor offline spelers die al eens online zijn geweest. Permissie
+  `stafftools.prefix` (default `op`). Opgeslagen in `plugins/StaffTools/prefixes.yml`.
 - `/report <speler> <reden>` — voor alle spelers; alleen zichtbaar voor beheer (+ console-log).
 - `/sgm <speler> <bericht>` — privébericht van beheer naar een speler (bv. als reactie op een
   report); andere beheer ziet het gesprek mee voor overzicht.
 - **Discord-webhook** (`discord.webhook-url` in config, geen bot nodig): logt joins, leaves en
   reports naar een Discord-kanaal. `/sgm` wordt standaard NIET gelogd (privacy), aan te zetten
   via `discord.log-sgm`.
+
+## survivalextras
+Drie losse onderdelen, elk aan/uit te zetten in de config:
+- **Nacht overslaan**: als `sleep.percentage` (standaard 50%) van de spelers in de wereld slaapt,
+  wordt het na een paar seconden ochtend. De slaper krijgt "Dikke doei! Goeie nachtrust" in beeld
+  plus een slaapliedje; iedereen ziet een chatbericht met de telling en hoort bij de ochtend een
+  deuntje met een "haan". Toeschouwers (dood in hardcore) tellen niet mee. De dagteller loopt
+  gewoon door, dus de wereldgrens van survivaltimeline groeit ook bij overgeslagen nachten.
+- **TPA**: `/tpa <speler>`, `/tpahere <speler>`, `/tpaccept`, `/tpdeny`, `/tpacancel`. Klikbare
+  [Accepteren]/[Weigeren], verzoek verloopt na 60 s, 5 s stilstaan (annuleert bij bewegen/schade),
+  30 s cooldown. Toeschouwers kunnen niet meedoen.
+- **Homes**: `/sethome [naam]`, `/home [naam]`, `/delhome <naam>`, `/homes` (klikbaar). Max. 2
+  homes, 5 s stilstaan, 30 s cooldown. Geen homes in de lobby-wereld van lobbyspawn.
+- `survivalextras.bypassdelay` (meteen teleporteren) staat voor niemand aan, ook niet voor OP's.
 
 ## funitems
 Leuke rechtermuisklik-spelletjes met nuggets (geen commando's):

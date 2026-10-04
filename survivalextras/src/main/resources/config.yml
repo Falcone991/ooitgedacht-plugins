@@ -1,0 +1,50 @@
+# SurvivalExtras configuratie
+#
+# Drie losse onderdelen: nacht overslaan, /tpa en homes. Elk onderdeel kan
+# je apart aan- of uitzetten. Gebruik & voor kleurcodes (bv. &e = geel).
+# Na het aanpassen: de server herstarten.
+
+sleep:
+  enabled: true
+  # Hoeveel procent van de spelers in de wereld moet slapen om de nacht over
+  # te slaan. 50 = de helft (bij 3 spelers dus 2). Toeschouwers (dode spelers
+  # in hardcore) tellen niet mee.
+  percentage: 50
+  # Hoe lang (seconden) er geslapen moet worden voordat het ochtend wordt (1 t/m 4).
+  skip-delay-seconds: 3
+  # Wat de slaper op het scherm ziet.
+  bed-title: "&9Dikke doei!"
+  bed-subtitle: "&7Goeie nachtrust &f☾"
+  # Chatbericht voor iedereen in de wereld. {player} {sleeping} {needed}
+  bed-message: "&9☾ &f{player} &7gaat slapen. Dikke doei, goeie nachtrust! &8({sleeping}/{needed})"
+  # Onderin beeld zolang er mensen slapen.
+  actionbar: "&7☾ {sleeping}/{needed} spelers slapen"
+  # Als de nacht is overgeslagen.
+  morning-title: "&6Goedemorgen!"
+  morning-subtitle: "&eDe nacht is overgeslagen ☀"
+  morning-message: "&6☀ &eGoedemorgen allemaal! De nacht is overgeslagen."
+  # Geluidjes bij het slapen gaan en bij de ochtend.
+  sounds: true
+
+tpa:
+  enabled: true
+  # Hoe lang (seconden) een verzoek geldig blijft.
+  expire-seconds: 60
+  # Hoe lang (seconden) je stil moet staan voordat je teleporteert. Beweeg je
+  # of krijg je schade, dan gaat het niet door. 0 = meteen.
+  warmup-seconds: 5
+  # Hoe lang (seconden) je na een geslaagde teleport moet wachten voor een nieuw verzoek.
+  cooldown-seconds: 30
+
+homes:
+  enabled: true
+  # Hoeveel homes iedere speler mag hebben.
+  max-homes: 2
+  # Hoe lang (seconden) je stil moet staan voordat je teleporteert. 0 = meteen.
+  warmup-seconds: 5
+  # Hoe lang (seconden) je na /home moet wachten voor de volgende /home.
+  cooldown-seconds: 30
+  # Werelden waar je GEEN home mag zetten (namen van de wereldmappen).
+  # De lobby van de LobbySpawn-plugin wordt automatisch uitgesloten als dat een
+  # aparte wereld is.
+  blocked-worlds: []

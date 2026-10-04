@@ -5,11 +5,15 @@ import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
+import org.bukkit.OfflinePlayer;
 import org.bukkit.Sound;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
+import org.bukkit.command.TabCompleter;
+import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.FileConfiguration;
+import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
@@ -20,16 +24,36 @@ import org.bukkit.scoreboard.Scoreboard;
 import org.bukkit.scoreboard.ScoreboardManager;
 import org.bukkit.scoreboard.Team;
 
+import java.io.File;
+import java.io.IOException;
 import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Locale;
+import java.util.Map;
+import java.util.Set;
+import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
 
-public class StaffTools extends JavaPlugin implements CommandExecutor, Listener {
+public class StaffTools extends JavaPlugin implements CommandExecutor, TabCompleter, Listener {
 
     private static final String STAFF_TEAM_NAME = "a_stafftools_beheer";
     private static final String PLAYERS_TEAM_NAME = "b_stafftools_spelers";
+    // Eigen prefix = eigen team per speler: "b_p_" + begin van de UUID. Sorteert in
+    // de tab-lijst tussen beheer en gewone spelers in.
+    private static final String PREFIX_TEAM_START = "b_p_";
+    private static final int MAX_PREFIX_LENGTH = 64;
+
+    // Eigen prefixes (UUID -> tekst met &-codes). Concurrent: de chat draait op een andere thread.
+    private final Map<UUID, String> prefixes = new ConcurrentHashMap<>();
+    private File prefixFile;
+    private YamlConfiguration prefixData;
 
     private String tabPrefix;
     private String chatPrefix;
@@ -50,9 +74,12 @@ public class StaffTools extends JavaPlugin implements CommandExecutor, Listener 
     public void onEnable() {
         saveDefaultConfig();
         loadSettings();
+        loadPrefixes();
         setupTeams();
 
         getCommand("report").setExecutor(this);
+        getCommand("prefix").setExecutor(this);
+        getCommand("prefix").setTabCompleter(this);
         Bukkit.getPluginManager().registerEvents(this, this);
 
         Bukkit.getScheduler().runTaskTimer(this, this::refreshAllStaffTeams, refreshIntervalTicks, refreshIntervalTicks);
@@ -93,6 +120,15 @@ public class StaffTools extends JavaPlugin implements CommandExecutor, Listener 
             board.registerNewTeam(PLAYERS_TEAM_NAME);
         }
 
+        // Prefix-teams opruimen van spelers die geen eigen prefix meer hebben.
+        Set<String> wanted = new HashSet<>();
+        for (UUID uuid : prefixes.keySet()) wanted.add(prefixTeamName(uuid));
+        for (Team team : new ArrayList<>(board.getTeams())) {
+            if (team.getName().startsWith(PREFIX_TEAM_START) && !wanted.contains(team.getName())) {
+                team.unregister();
+            }
+        }
+
         refreshAllStaffTeams();
     }
 
@@ -115,8 +151,11 @@ public class StaffTools extends JavaPlugin implements CommandExecutor, Listener 
         Team playersTeam = board.getTeam(PLAYERS_TEAM_NAME);
         if (staffTeam == null || playersTeam == null) return;
 
-        boolean isStaff = player.hasPermission("stafftools.staff");
-        Team targetTeam = isStaff ? staffTeam : playersTeam;
+        // Een eigen prefix gaat vóór de [Beheer]-tag.
+        Team targetTeam = prefixTeam(board, player.getUniqueId());
+        if (targetTeam == null) {
+            targetTeam = player.hasPermission("stafftools.staff") ? staffTeam : playersTeam;
+        }
         Team currentTeam = board.getEntryTeam(player.getName());
 
         if (currentTeam == targetTeam) return;
@@ -127,14 +166,168 @@ public class StaffTools extends JavaPlugin implements CommandExecutor, Listener 
         targetTeam.addEntry(player.getName());
     }
 
+    // ---------- Eigen prefixes ----------
+
+    private void loadPrefixes() {
+        prefixFile = new File(getDataFolder(), "prefixes.yml");
+        prefixData = YamlConfiguration.loadConfiguration(prefixFile);
+        ConfigurationSection section = prefixData.getConfigurationSection("players");
+        if (section == null) return;
+        for (String key : section.getKeys(false)) {
+            String prefix = section.getString(key + ".prefix");
+            if (prefix == null || prefix.isEmpty()) continue;
+            try {
+                prefixes.put(UUID.fromString(key), prefix);
+            } catch (IllegalArgumentException ignored) {
+                // ongeldige regel overslaan
+            }
+        }
+    }
+
+    private void savePrefixes() {
+        try {
+            prefixData.save(prefixFile);
+        } catch (IOException e) {
+            getLogger().severe("Kon prefixes.yml niet opslaan: " + e.getMessage());
+        }
+    }
+
+    private static String prefixTeamName(UUID uuid) {
+        return PREFIX_TEAM_START + uuid.toString().replace("-", "").substring(0, 12);
+    }
+
+    /** Wat er vóór de naam komt: de prefix zelf, dan reset en een spatie. */
+    private static Component prefixComponent(String prefix) {
+        return LegacyComponentSerializer.legacyAmpersand().deserialize(prefix.trim() + "&r ");
+    }
+
+    /** Team met de eigen prefix van deze speler (aangemaakt/bijgewerkt), of null als die er geen heeft. */
+    private Team prefixTeam(Scoreboard board, UUID uuid) {
+        String prefix = prefixes.get(uuid);
+        if (prefix == null) return null;
+        String name = prefixTeamName(uuid);
+        Team team = board.getTeam(name);
+        if (team == null) team = board.registerNewTeam(name);
+        Component wanted = prefixComponent(prefix);
+        if (!wanted.equals(team.prefix())) team.prefix(wanted);
+        return team;
+    }
+
+    private boolean handlePrefix(CommandSender sender, String[] args) {
+        if (!sender.hasPermission("stafftools.prefix")) {
+            sender.sendMessage(ChatColor.RED + "Je hebt geen rechten voor dit commando.");
+            return true;
+        }
+        String sub = args.length > 0 ? args[0].toLowerCase(Locale.ROOT) : "";
+
+        if (sub.equals("list")) {
+            if (prefixes.isEmpty()) {
+                sender.sendMessage(ChatColor.GRAY + "Er zijn nog geen prefixes ingesteld.");
+                return true;
+            }
+            sender.sendMessage(ChatColor.YELLOW + "=== Prefixes ===");
+            for (Map.Entry<UUID, String> entry : prefixes.entrySet()) {
+                String name = prefixData.getString("players." + entry.getKey() + ".name", entry.getKey().toString());
+                sender.sendMessage(Component.text()
+                        .append(prefixComponent(entry.getValue()))
+                        .append(Component.text(name))
+                        .append(Component.text("  (" + entry.getValue() + ")", net.kyori.adventure.text.format.NamedTextColor.DARK_GRAY))
+                        .build());
+            }
+            return true;
+        }
+
+        if ((!sub.equals("set") || args.length < 3) && (!sub.equals("remove") || args.length != 2)) {
+            sender.sendMessage(ChatColor.YELLOW + "Gebruik:");
+            sender.sendMessage(ChatColor.YELLOW + "  /prefix set <speler> <prefix>" + ChatColor.GRAY + "  bv. /prefix set Steve &6[VIP]");
+            sender.sendMessage(ChatColor.YELLOW + "  /prefix remove <speler>");
+            sender.sendMessage(ChatColor.YELLOW + "  /prefix list");
+            sender.sendMessage(ChatColor.GRAY + "Kleuren met &: &c rood, &6 goud, &e geel, &a groen, &b aqua, &9 blauw, &d roze, &l vet.");
+            return true;
+        }
+
+        OfflinePlayer target = Bukkit.getPlayerExact(args[1]);
+        if (target == null) target = Bukkit.getOfflinePlayerIfCached(args[1]);
+        if (target == null || target.getName() == null) {
+            sender.sendMessage(ChatColor.RED + "Speler '" + args[1] + "' is nog nooit op de server geweest.");
+            return true;
+        }
+        UUID uuid = target.getUniqueId();
+        String path = "players." + uuid;
+
+        if (sub.equals("set")) {
+            String prefix = String.join(" ", Arrays.copyOfRange(args, 2, args.length)).trim();
+            if (prefix.length() > MAX_PREFIX_LENGTH) {
+                sender.sendMessage(ChatColor.RED + "Die prefix is te lang (max. " + MAX_PREFIX_LENGTH + " tekens, kleurcodes meegeteld).");
+                return true;
+            }
+            prefixes.put(uuid, prefix);
+            prefixData.set(path + ".name", target.getName());
+            prefixData.set(path + ".prefix", prefix);
+            savePrefixes();
+            sender.sendMessage(Component.text()
+                    .append(Component.text("Prefix ingesteld: ", net.kyori.adventure.text.format.NamedTextColor.GREEN))
+                    .append(prefixComponent(prefix))
+                    .append(Component.text(target.getName()))
+                    .build());
+        } else {
+            if (prefixes.remove(uuid) == null) {
+                sender.sendMessage(ChatColor.RED + target.getName() + " heeft geen eigen prefix.");
+                return true;
+            }
+            prefixData.set(path, null);
+            savePrefixes();
+            Scoreboard board = getMainScoreboard();
+            Team team = board == null ? null : board.getTeam(prefixTeamName(uuid));
+            if (team != null) team.unregister();
+            sender.sendMessage(ChatColor.GREEN + "Prefix van " + target.getName() + " verwijderd.");
+        }
+
+        Player online = target.getPlayer();
+        if (online != null) refreshStaffTeam(online);
+        return true;
+    }
+
+    @Override
+    public List<String> onTabComplete(CommandSender sender, Command command, String alias, String[] args) {
+        if (!command.getName().equalsIgnoreCase("prefix") || !sender.hasPermission("stafftools.prefix")) {
+            return Collections.emptyList();
+        }
+        List<String> result = new ArrayList<>();
+        if (args.length == 1) {
+            for (String option : new String[]{"set", "remove", "list"}) {
+                if (option.startsWith(args[0].toLowerCase(Locale.ROOT))) result.add(option);
+            }
+        } else if (args.length == 2 && (args[0].equalsIgnoreCase("set") || args[0].equalsIgnoreCase("remove"))) {
+            String typed = args[1].toLowerCase(Locale.ROOT);
+            if (args[0].equalsIgnoreCase("remove")) {
+                for (UUID uuid : prefixes.keySet()) {
+                    String name = prefixData.getString("players." + uuid + ".name", "");
+                    if (name.toLowerCase(Locale.ROOT).startsWith(typed)) result.add(name);
+                }
+            } else {
+                for (Player p : Bukkit.getOnlinePlayers()) {
+                    if (p.getName().toLowerCase(Locale.ROOT).startsWith(typed)) result.add(p.getName());
+                }
+            }
+        }
+        return result;
+    }
+
     // ---------- Chat-tag ----------
 
     @EventHandler
     public void onChat(AsyncChatEvent event) {
         Player player = event.getPlayer();
-        if (!player.hasPermission("stafftools.staff")) return;
-
-        Component prefix = LegacyComponentSerializer.legacyAmpersand().deserialize(chatPrefix);
+        String custom = prefixes.get(player.getUniqueId());
+        Component prefix;
+        if (custom != null) {
+            prefix = prefixComponent(custom);
+        } else if (player.hasPermission("stafftools.staff")) {
+            prefix = LegacyComponentSerializer.legacyAmpersand().deserialize(chatPrefix);
+        } else {
+            return;
+        }
         event.renderer((source, sourceDisplayName, message, viewer) ->
                 Component.text().append(prefix).append(sourceDisplayName).append(Component.text(": ")).append(message).build());
     }
@@ -164,6 +357,9 @@ public class StaffTools extends JavaPlugin implements CommandExecutor, Listener 
     public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
         if (command.getName().equalsIgnoreCase("sgm")) {
             return handleSgm(sender, args);
+        }
+        if (command.getName().equalsIgnoreCase("prefix")) {
+            return handlePrefix(sender, args);
         }
         if (!command.getName().equalsIgnoreCase("report")) return false;
 

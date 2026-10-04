@@ -1,9 +1,9 @@
 name: StaffTools
-version: '1.0.0'
+version: '1.1.0'
 main: com.example.stafftools.StaffTools
 api-version: '1.21'
 author: Claude
-description: Beheer-tag in tab/chat voor OP's, /report commando zichtbaar voor beheer, en Discord-logging via webhook.
+description: Beheer-tag en eigen prefixes (/prefix) in tab/chat, /report commando zichtbaar voor beheer, en Discord-logging via webhook.
 
 commands:
   report:
@@ -14,8 +14,15 @@ commands:
     description: Stuur een priv\u00e9bericht als beheer naar een speler.
     usage: /sgm <speler> <bericht>
     permission: stafftools.staff
+  prefix:
+    description: Geef een speler een eigen prefix in tab en chat.
+    usage: /prefix <set|remove|list> [speler] [prefix]
+    permission: stafftools.prefix
 
 permissions:
+  stafftools.prefix:
+    description: Mag prefixes van spelers instellen en verwijderen.
+    default: op
   stafftools.staff:
     description: Telt als "beheer" - krijgt de tag in tab/chat en ziet reports.
     default: op
