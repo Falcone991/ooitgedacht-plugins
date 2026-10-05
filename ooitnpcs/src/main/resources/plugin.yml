@@ -1,0 +1,19 @@
+name: OoitNPCs
+version: '1.0.0'
+main: com.example.ooitnpcs.OoitNpcs
+api-version: '26.3'
+author: Claude
+description: Speler-NPC's (met skin) waar je op klikt om bv. naar survival te gaan.
+softdepend: [OoitWorlds, LobbySpawn]
+
+commands:
+  npc:
+    description: NPC's beheren.
+    usage: /npc help
+    aliases: [npcs]
+    permission: ooitnpcs.admin
+
+permissions:
+  ooitnpcs.admin:
+    description: Mag NPC's maken, aanpassen en verwijderen.
+    default: op

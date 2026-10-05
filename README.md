@@ -2,7 +2,7 @@
 
 Gemaakt met behulp van CLaud ai,_
 
-Acht losse Paper-plugins plus een losse Discord-bot, elk een eigen Maven-project (eigen
+Negen losse Paper-plugins plus een losse Discord-bot, elk een eigen Maven-project (eigen
 `pom.xml`). Bouwen gaat overal hetzelfde: `cd <map>` dan `mvn package`, de jar komt in
 `<map>/target/<naam>.jar`.
 
@@ -99,6 +99,24 @@ Alleen voor OP's (`ooitworlds.admin`).
 - Gamemode-wissel is hardcore-veilig: de oude gamemode wordt op de speler bewaard en teruggezet
   bij het verlaten; toeschouwers en OP's worden nooit aangepast.
 - Let op (Minecraft 26+): extra werelden staan binnen de map `world`, onder `dimensions/minecraft/`.
+
+## ooitnpcs
+Speler-NPC's met skin (de "mannequin" uit Minecraft zelf, geen Citizens nodig) waar je op klikt
+(links of rechts) om iets te doen. Alleen voor OP's (`ooitnpcs.admin`). **Let op:** deze plugin
+bouwt tegen de 26.3-API (`paper-api 26.3.build.*`) en heeft Java 25 nodig.
+- `/npc create <naam> [skin-speler]` — NPC waar je staat (vanuit de console: bij de spawn).
+- `/npc create <naam> item` — **voorwerp-NPC**: het item uit je hand zweeft groot en draait
+  langzaam rond (bv. een wereldbol-hoofd van minecraft-heads.com), met de naam erboven en een
+  onzichtbare klikbox. `/npc size <naam> <0.25-6>`, `/npc spin <naam> <aan|uit>`,
+  `/npc item <naam>` (ander item uit je hand).
+- `/npc action <naam> speler <commando>` (bv. `survival`), `wereld <wereld>`,
+  `console <commando>` (`{player}` = wie klikt) of `geen`.
+- `/npc name|text|skin <naam> <...>` — naam boven het hoofd, tekst eronder (& voor kleuren,
+  `geen` = weg), skin van een Minecraft-speler.
+- `/npc move|tp|info|remove|respawn <naam>`, `/npc look <naam> <aan|uit>` (hoofd draait naar
+  spelers in de buurt), `/npc list`.
+- Onkwetsbaar, beweegt niet, geen drops. Raakt een NPC kwijt (bv. `/kill`), dan wordt hij vanzelf
+  opnieuw neergezet. Opgeslagen in `plugins/OoitNPCs/npcs.yml`.
 
 ## funitems
 Leuke rechtermuisklik-spelletjes met nuggets (geen commando's):
