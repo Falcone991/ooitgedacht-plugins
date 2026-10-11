@@ -1,0 +1,18 @@
+# LobbyGames configuratie
+#
+# Parkour en duels stel je in het spel in (zie /parkour en /duel als beheerder).
+# Na het aanpassen van dit bestand: de server herstarten.
+
+parkour:
+  # Hoe vaak de tijd onderin beeld ververst wordt (ticks, 20 = 1 seconde).
+  timer-ticks: 2
+
+duel:
+  # Hoe lang (seconden) een duel-verzoek geldig blijft.
+  request-seconds: 60
+  # Aftellen (seconden) voordat het gevecht begint.
+  countdown-seconds: 3
+  # Na zoveel seconden is het gelijkspel.
+  max-seconds: 300
+  # Hoe lang (seconden) je na het einde nog in de arena staat, voor je terug gaat.
+  end-delay-seconds: 3

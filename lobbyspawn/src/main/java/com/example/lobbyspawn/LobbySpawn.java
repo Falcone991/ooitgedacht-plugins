@@ -65,6 +65,10 @@ public class LobbySpawn extends JavaPlugin implements CommandExecutor, Listener 
 
     // Hub-gedrag: iedereen start bij het inloggen in de lobby (uit config.yml)
     private boolean hubEnabled;
+
+    // Survival open/dicht (bv. dicht tijdens een openingsspeech in de lobby)
+    private boolean survivalOpen;
+    private final Map<UUID, Long> lastClosedMessage = new HashMap<>();
     private String survivalWorldName;
 
     // Delay-instellingen (uit config.yml)
@@ -102,6 +106,10 @@ public class LobbySpawn extends JavaPlugin implements CommandExecutor, Listener 
         getCommand("buildprotection").setExecutor(this);
         getCommand("rules").setExecutor(this);
         getCommand("survival").setExecutor(this);
+        getCommand("survival").setTabCompleter((sender, cmd, alias, args) ->
+                args.length == 1 && sender.hasPermission("lobbyspawn.admin")
+                        ? java.util.Arrays.asList("open", "dicht").stream().filter(s -> s.startsWith(args[0].toLowerCase())).collect(java.util.stream.Collectors.toList())
+                        : java.util.Collections.emptyList());
 
         Bukkit.getPluginManager().registerEvents(this, this);
 
@@ -149,6 +157,7 @@ public class LobbySpawn extends JavaPlugin implements CommandExecutor, Listener 
         forceExactSpawn = c.getBoolean("world-spawn.force-exact-spawn", true);
 
         hubEnabled = c.getBoolean("hub.enabled", false);
+        survivalOpen = c.getBoolean("survival-access.open", true);
         String configuredSurvivalWorld = c.getString("hub.survival-world", "");
         if (configuredSurvivalWorld == null || configuredSurvivalWorld.isEmpty()) {
             survivalWorldName = Bukkit.getWorlds().get(0).getName();
@@ -181,6 +190,8 @@ public class LobbySpawn extends JavaPlugin implements CommandExecutor, Listener 
         c.set("build-protection.message", buildProtectionMessage);
         c.set("build-protection.sound-enabled", buildProtectionSoundEnabled);
         c.set("build-protection.block-interactions", buildProtectionBlockInteractions);
+
+        c.set("survival-access.open", survivalOpen);
 
         saveConfig();
     }
@@ -249,6 +260,9 @@ public class LobbySpawn extends JavaPlugin implements CommandExecutor, Listener 
             case "rules":
                 return handleRules(sender);
             case "survival":
+                if (args.length == 1 && (args[0].equalsIgnoreCase("open") || args[0].equalsIgnoreCase("dicht"))) {
+                    return handleSurvivalAccess(sender, args[0].equalsIgnoreCase("open"));
+                }
                 return handleSurvival(sender);
             default:
                 return false;
@@ -283,9 +297,67 @@ public class LobbySpawn extends JavaPlugin implements CommandExecutor, Listener 
             dest = world.getSpawnLocation();
         }
 
-        player.teleport(dest);
+        if (!player.teleport(dest)) return true; // bv. survival is dicht (zie onTeleport)
         player.sendMessage(ChatColor.GREEN + "Welkom terug in survival!");
         return true;
+    }
+
+    // ---------- Survival open / dicht ----------
+
+    private boolean handleSurvivalAccess(CommandSender sender, boolean open) {
+        if (!sender.hasPermission("lobbyspawn.admin")) {
+            sender.sendMessage(ChatColor.RED + "Je hebt geen rechten voor dit commando.");
+            return true;
+        }
+        if (survivalOpen == open) {
+            sender.sendMessage(ChatColor.YELLOW + "Survival is al " + (open ? "open" : "dicht") + ".");
+            return true;
+        }
+        survivalOpen = open;
+        saveSettings();
+        getLogger().info("Survival " + (open ? "geopend" : "dichtgezet") + " door " + sender.getName() + ".");
+
+        if (open) {
+            net.kyori.adventure.title.Title title = net.kyori.adventure.title.Title.title(
+                    net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer.legacyAmpersand().deserialize("&a&lSURVIVAL IS OPEN!"),
+                    net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer.legacyAmpersand().deserialize("&7Klik op de NPC of typ /survival"),
+                    net.kyori.adventure.title.Title.Times.times(java.time.Duration.ofMillis(500),
+                            java.time.Duration.ofSeconds(4), java.time.Duration.ofSeconds(1)));
+            for (Player p : Bukkit.getOnlinePlayers()) {
+                p.showTitle(title);
+                p.playSound(p.getLocation(), Sound.UI_TOAST_CHALLENGE_COMPLETE, 1.0f, 1.0f);
+            }
+            Bukkit.broadcastMessage(ChatColor.GREEN + "" + ChatColor.BOLD + "Survival is open! " + ChatColor.GREEN
+                    + "Klik op de NPC of typ /survival om te beginnen.");
+        } else {
+            sender.sendMessage(ChatColor.YELLOW + "Survival is nu dicht: alleen beheer kan vanuit de lobby naar survival."
+                    + " Openen: /survival open");
+        }
+        return true;
+    }
+
+    /**
+     * Survival dicht? Dan mag niemand (behalve beheer) vanuit de lobby naar een
+     * andere wereld: geldt voor /survival, /spawn, /home, /tpa, NPC's, enzovoort.
+     */
+    @EventHandler(ignoreCancelled = true)
+    public void onTeleport(org.bukkit.event.player.PlayerTeleportEvent event) {
+        if (survivalOpen || !lobbySet) return;
+        Location from = event.getFrom();
+        Location to = event.getTo();
+        if (to == null || from.getWorld() == null || to.getWorld() == null) return;
+        if (!from.getWorld().getName().equals(lobbyWorld) || to.getWorld().getName().equals(lobbyWorld)) return;
+        Player player = event.getPlayer();
+        if (player.hasPermission("lobbyspawn.admin")) return;
+
+        event.setCancelled(true);
+        long now = System.currentTimeMillis();
+        Long last = lastClosedMessage.get(player.getUniqueId());
+        if (last == null || now - last > 2000L) {
+            lastClosedMessage.put(player.getUniqueId(), now);
+            player.sendMessage(ChatColor.GOLD + "Survival is nog dicht — de server opent zo! Blijf nog even in de lobby.");
+            player.playSound(player.getLocation(), Sound.BLOCK_NOTE_BLOCK_BASS, 0.8f, 0.8f);
+        }
     }
 
     @EventHandler

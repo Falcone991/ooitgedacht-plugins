@@ -21,7 +21,7 @@ border-increment-per-ingame-day: 2.0
 
 # De beginwaarde van de wereldgrens (diameter) wanneer de plugin voor het
 # eerst wordt gestart. Wordt genegeerd als de grens al eerder is ingesteld.
-border-start-size: 200.0
+border-start-size: 6000.0
 
 # Naam van de hoofdwereld waarvan de in-game dag geteld wordt en waarvan
 # de wereldgrens wordt aangepast. Leeg laten = automatisch de eerste
@@ -31,3 +31,33 @@ main-world: ""
 # Zet aankondigingen (broadcasts) aan/uit voor belangrijke momenten
 # (nether open, hardcore geactiveerd, wereldgrens gegroeid).
 announce: true
+
+# De finale: vanaf deze week krimpt de wereldgrens elke dag op een vast tijdstip,
+# tot er nog maar één speler in leven is. Die wint (titel, vuurwerk, melding voor iedereen).
+finale:
+  enabled: true
+  # In welke week de finale begint (4 = samen met hardcore).
+  start-week: 4
+  # In hoeveel dagen de grens van zijn grootte bij de start van de finale naar
+  # min-size gaat. Elke dag krimpt hij een even groot stuk.
+  days: 7
+  # Hoe laat hij elke dag krimpt (echte tijd), en in welke tijdzone.
+  # Slaapt de server op dat moment, dan krimpt hij zodra de server weer aan gaat.
+  shrink-time: "20:00"
+  timezone: "Europe/Amsterdam"
+  # Zoveel minuten van tevoren krijgt iedereen een waarschuwing (0 = geen).
+  warn-minutes: 10
+  # Hoe lang (seconden) het krimpen zelf duurt. 1800 = een half uur.
+  shrink-seconds: 1800
+  # Kleiner dan dit wordt de grens nooit (breedte in blokken).
+  min-size: 50
+  # Nether en End dicht tijdens de finale; wie er nog is, gaat terug naar de overworld.
+  close-nether-end: true
+  # Wie tijdens de finale zoveel uur niet online is geweest, ligt eruit (geteld vanaf
+  # de start van de finale). Zo hoeft de winnaar niet te wachten op wie weg blijft.
+  # Is er niemand meer over (bv. de laatsten gaan tegelijk dood), dan wint wie als laatste afviel.
+  inactive-hours: 24
+  # Wie terugkomt en buiten de grens staat, krijgt zoveel minuten om naar de grens
+  # te lopen zonder grensschade (de verkeerde kant op = schade zoals bij honger).
+  # 0 = uit.
+  return-grace-minutes: 30

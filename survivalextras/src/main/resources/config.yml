@@ -48,3 +48,23 @@ homes:
   # De lobby van de LobbySpawn-plugin wordt automatisch uitgesloten als dat een
   # aparte wereld is.
   blocked-worlds: []
+
+banned-items:
+  enabled: true
+  # Deze wapens zijn uitgeschakeld. Ze kunnen nooit gecraft worden (ook niet in
+  # de smeedtafel of de crafter). Namen zoals in /give, zonder "minecraft:".
+  items:
+    - mace
+    - wooden_spear
+    - stone_spear
+    - copper_spear
+    - iron_spear
+    - golden_spear
+    - diamond_spear
+    - netherite_spear
+  # false = ook niet te gebruiken, niet op te pakken, mobs krijgen ze niet, en wie
+  #         er al een heeft raakt hem kwijt (bij inloggen of na het sluiten van een kist).
+  # true  = ALLEEN craften is geblokkeerd; gevonden wapens werken gewoon.
+  only-crafting: false
+  # Melding onderin beeld als iemand zo'n wapen probeert te gebruiken of op te pakken.
+  message: "&cDit wapen is uitgeschakeld op deze server."

@@ -25,6 +25,11 @@ bot:
   staff-role-id: ""
   # ID van de rol die gepingd wordt bij belangrijke logs (zie logs.ping-on). Leeg = nooit pingen.
   alert-role-id: ""
+  # Tickets (/ticket paneel): in welke categorie de ticket-kanalen komen.
+  # Leeg = dezelfde categorie als het kanaal waar het paneel staat.
+  ticket-category-id: ""
+  # Waar de kopie van een gesloten ticket heen gaat. Leeg = het log-kanaal.
+  ticket-log-channel-id: ""
   # Kleine tekst onderaan elke embed (naast het tijdstip). Leeg = geen tekst.
   embed-footer: "OoitGedacht SMP"
 

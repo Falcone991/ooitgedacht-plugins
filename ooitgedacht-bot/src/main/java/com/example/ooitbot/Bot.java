@@ -14,6 +14,7 @@ import net.dv8tion.jda.api.entities.channel.concrete.TextChannel;
 import net.dv8tion.jda.api.events.interaction.ModalInteractionEvent;
 import net.dv8tion.jda.api.events.interaction.command.CommandAutoCompleteInteractionEvent;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
+import net.dv8tion.jda.api.events.interaction.component.ButtonInteractionEvent;
 import net.dv8tion.jda.api.events.session.ReadyEvent;
 import net.dv8tion.jda.api.exceptions.ErrorResponseException;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
@@ -85,6 +86,8 @@ final class Bot extends ListenerAdapter implements ServerLink.Callbacks {
     private final GameCommands gameCommands;
     private final FunCommands funCommands;
     private final EmbedCommand embedCommand;
+    private final EnglishCommand englishCommand = new EnglishCommand();
+    private final Tickets tickets = new Tickets(this);
     private final GitHubFeed gitHubFeed;
 
     private volatile String lastPresence;
@@ -432,6 +435,8 @@ final class Bot extends ListenerAdapter implements ServerLink.Callbacks {
 
         List<SlashCommandData> all = new ArrayList<>(GameCommands.definitions(staffOnly));
         all.add(EmbedCommand.command(staffOnly));
+        all.add(EnglishCommand.command());
+        all.add(Tickets.command());
         if (funCommands != null) all.addAll(FunCommands.commands());
 
         guild.updateCommands().addCommands(all).queue(
@@ -443,6 +448,14 @@ final class Bot extends ListenerAdapter implements ServerLink.Callbacks {
     public void onSlashCommandInteraction(SlashCommandInteractionEvent event) {
         if (gameCommands.handle(event)) return;
         if (funCommands != null && funCommands.handle(event)) return;
+        if (event.getName().equals("english")) {
+            englishCommand.handle(event);
+            return;
+        }
+        if (event.getName().equals("ticket")) {
+            tickets.handle(event);
+            return;
+        }
 
         if (event.getName().equals("embed")) {
             if (!isStaff(event.getMember())) {
@@ -468,7 +481,17 @@ final class Bot extends ListenerAdapter implements ServerLink.Callbacks {
 
     @Override
     public void onModalInteraction(ModalInteractionEvent event) {
+        if (tickets.handleModal(event)) return;
         embedCommand.handleModal(event);
+    }
+
+    @Override
+    public void onButtonInteraction(ButtonInteractionEvent event) {
+        tickets.handleButton(event);
+    }
+
+    String staffRoleId() {
+        return staffRoleId;
     }
 
     // ---------- Hulpjes voor de commando-klassen ----------

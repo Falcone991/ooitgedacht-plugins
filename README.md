@@ -2,7 +2,7 @@
 
 Gemaakt met behulp van CLaud ai,_
 
-Negen losse Paper-plugins plus een losse Discord-bot, elk een eigen Maven-project (eigen
+Tien losse Paper-plugins plus een losse Discord-bot, elk een eigen Maven-project (eigen
 `pom.xml`). Bouwen gaat overal hetzelfde: `cd <map>` dan `mvn package`, de jar komt in
 `<map>/target/<naam>.jar`.
 
@@ -16,7 +16,27 @@ Fasegewijze survival-tijdlijn, real-life weken geteld vanaf de eerste start:
 - Week 0–3: normale respawns. Na 3 volledige weken: **hardcore** (alle werelden).
 - Vanaf week 2 (dag 7): **Nether** open. Vanaf week 3 (dag 14): **End** open.
 - Wereldgrens groeit elke **in-game dag** automatisch met een instelbaar aantal blokken.
-- `/survivaltimeline` (alias `/stimeline`) toont de status.
+- **Finale** (vanaf `finale.start-week`, standaard week 4 = samen met hardcore): de wereldgrens
+  groeit niet meer maar krimpt elke dag om `shrink-time` (20:00, echte tijd) in gelijke stappen,
+  zodat hij na `days` (7) dagen op `min-size` (50) staat; 10 minuten vooraf een waarschuwing, het
+  krimpen zelf duurt 30 minuten. Sliep de server, dan haalt hij de gemiste stappen in bij het
+  opstarten. Nether en End gaan dicht; wie er is wordt teruggestuurd.
+  Wie terugkomt en buiten de grens staat, krijgt `return-grace-minutes` (30) om naar de grens te
+  lopen zonder grensschade (timer start bij bewegen; richting en coördinaten onderin beeld; de
+  verkeerde kant op = schade zoals bij honger). Resterende tijd blijft bewaard bij uitloggen. Wie in hardcore sterft is uitgeschakeld; zodra er nog één speler over is (en er
+  in de finale al iemand is afgevallen) wint die: titel voor iedereen en vuurwerk.
+  Wie tijdens de finale `inactive-hours` (24) niet online is geweest, is ook uitgeschakeld (geteld
+  vanaf de start van de finale); bij inloggen wordt die toeschouwer. Gaan de laatsten tegelijk
+  dood, dan wint wie als laatste stierf.
+- **Na de winst is het seizoen voorbij**: wereldgrens weg, hardcore uit, Nether/End weer open, en
+  iedereen die dood was komt terug in survival (offline spelers bij de volgende keer inloggen).
+- `/survivaltimeline` (alias `/stimeline`) toont de status. Beheer (`survivaltimeline.admin`, OP)
+  kan fases testen: `/stimeline week <n>`, `/stimeline krimp`, `/stimeline winnaar <speler>` en
+  `/stimeline reset bevestig` (alles terug naar week 1). Veilig testen op de echte server:
+  `/stimeline test start` bewaart de stand (in `test-backup.yml`, overleeft een herstart),
+  `/stimeline test stop` zet alles precies terug (week, fases, grens, wie er dood was).
+  `/stimeline test eindstrijd` test het eindgevecht: alleen de spelers die nu online zijn doen mee,
+  de grens springt naar `min-size` en ze worden in een kring in de arena gezet.
 - Config: `weeks-before-hardcore`, `nether-open-week`, `end-open-week`,
   `border-increment-per-ingame-day`, `border-start-size`, `main-world`, `announce`.
 
@@ -79,6 +99,10 @@ Drie losse onderdelen, elk aan/uit te zetten in de config:
   30 s cooldown. Toeschouwers kunnen niet meedoen.
 - **Homes**: `/sethome [naam]`, `/home [naam]`, `/delhome <naam>`, `/homes` (klikbaar). Max. 2
   homes, 5 s stilstaan, 30 s cooldown. Geen homes in de lobby-wereld van lobbyspawn.
+- **Uitgeschakelde wapens** (`banned-items`): standaard de mace en alle speren. Nooit te craften
+  (ook niet via smeedtafel of crafter). Met `only-crafting: false` (standaard) ook niet te
+  gebruiken of op te pakken, mobs krijgen ze niet, en bestaande exemplaren verdwijnen bij inloggen
+  of na het sluiten van een kist. Uitzondering via `survivalextras.banneditems.bypass`.
 - `survivalextras.bypassdelay` (meteen teleporteren) staat voor niemand aan, ook niet voor OP's.
 
 ## ooitworlds
@@ -118,6 +142,21 @@ bouwt tegen de 26.3-API (`paper-api 26.3.build.*`) en heeft Java 25 nodig.
 - Onkwetsbaar, beweegt niet, geen drops. Raakt een NPC kwijt (bv. `/kill`), dan wordt hij vanzelf
   opnieuw neergezet. Opgeslagen in `plugins/OoitNPCs/npcs.yml`.
 
+## lobbygames
+Spelletjes in de lobby:
+- **Parkour**: beheer zet de punten waar ze staan: `/parkour setstart`, `/parkour addcheckpoint`
+  (in volgorde), `/parkour setfinish` (+ `clearcheckpoints`, `setfall [auto]`, `resettimes`, `info`).
+  Op de start stappen = timer aan (onderin beeld); checkpoints in volgorde; finish = tijd + record.
+  Vallen onder het laagste punt (of `setfall`) = terug naar je checkpoint. Vliegen/creative/teleport
+  stopt je poging. Spelers: `/parkour top`, `/parkour terug`, `/parkour stop`. Opslag: `parkour.yml`.
+- **Duels** (1-tegen-1): `/duel <speler>` (klikbaar accepteren/weigeren) of `/duel wachtrij`
+  (bv. via een NPC: `/npc action <naam> speler duel wachtrij`). Beheer: `/duel setspawn1|setspawn2`
+  (startplekken), `/duel setkit` (= je huidige inventory) / `resetkit`, `info`. Eigen spullen, XP,
+  levens, gamemode en plek worden opgeborgen (ook op schijf: `duel-saves.yml`) en daarna teruggegeven;
+  niemand gaat echt dood (veilig in hardcore). Alleen schade van je tegenstander telt; geen commando's
+  of droppen tijdens een duel; uitloggen = verliezen; na 5 minuten gelijkspel. Alleen vanuit de
+  lobby. `/duel top` = ranglijst. Opslag: `duels.yml`.
+
 ## funitems
 Leuke rechtermuisklik-spelletjes met nuggets (geen commando's):
 - **Gouden nugget**: kop-of-munt, met geluidje.
@@ -156,6 +195,15 @@ Wat het doet:
 - **GitHub-updates** (`github:` in de bot-config): nieuwe commits op een branch van deze repo
   komen als embed in een eigen kanaal (link per commit, auteur met avatar). Kijkt elke 2 minuten
   via de GitHub-API; geen token nodig voor een publieke repo.
+- **`/english`**: stuurt de Engelse uitleg over de server privé (DM) naar wie het typt; DM's dicht =
+  antwoord dat alleen die persoon ziet. Tekst staat in `english.txt` naast de bot (aanpasbaar, `---` =
+  nieuw bericht).
+- **Tickets**: `/ticket paneel` (beheer) plaatst een bericht met de knop "Ticket openen". Speler vult in
+  waar het over gaat en krijgt een eigen privé-kanaal met beheer (staff-rol wordt gepingd); één open
+  ticket per speler. "Sluiten" (of `/ticket sluiten`) stuurt een kopie van het gesprek als tekstbestand
+  naar het log-kanaal (`bot.ticket-log-channel-id`) en verwijdert het kanaal. Categorie:
+  `bot.ticket-category-id`. De bot heeft "Kanalen beheren" + "Rollen beheren" nodig, en voor de kopie
+  de "Message Content Intent" in het Developer Portal.
 - **Altijd beschikbaar** (ook als de server slaapt): `/streak`, `/streaks`, `/goldnugget`,
   `/coppernugget [keuze]`, `/ironnugget`, `/embed` (beheer: formulier voor een bericht met
   gekleurde rand; met `bericht-id` bewerk je een eerder bericht).

@@ -46,6 +46,12 @@ build-protection:
   # plaatsen). Kisten en andere opslag worden hier NIET door geraakt.
   block-interactions: true
 
+survival-access:
+  # false = survival is dicht: niemand (behalve beheer) kan vanuit de lobby naar
+  # survival (ook niet via NPC, /spawn, /home of /tpa). Handig voor een opening.
+  # In het spel: /survival dicht en /survival open.
+  open: true
+
 hub:
   # Zet op true zodra je lobby-wereld klaar staat: iedereen komt dan bij
   # het inloggen ALTIJD eerst in de lobby terecht (ook terugkerende

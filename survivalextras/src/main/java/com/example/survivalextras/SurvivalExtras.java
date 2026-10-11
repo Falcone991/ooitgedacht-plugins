@@ -49,9 +49,17 @@ public class SurvivalExtras extends JavaPlugin {
             disable(homeCommands);
         }
 
+        String banned = "uit";
+        if (c.getBoolean("banned-items.enabled", true)) {
+            BannedItems bannedItems = new BannedItems(this);
+            Bukkit.getPluginManager().registerEvents(bannedItems, this);
+            banned = bannedItems.count() + (bannedItems.onlyCrafting() ? " (alleen craften)" : "");
+        }
+
         getLogger().info("SurvivalExtras geladen. Slapen: " + c.getBoolean("sleep.enabled", true)
                 + " (" + c.getInt("sleep.percentage", 50) + "%), tpa: " + c.getBoolean("tpa.enabled", true)
-                + ", homes: " + c.getBoolean("homes.enabled", true) + " (max " + c.getInt("homes.max-homes", 2) + ").");
+                + ", homes: " + c.getBoolean("homes.enabled", true) + " (max " + c.getInt("homes.max-homes", 2) + ")"
+                + ", uitgeschakelde wapens: " + banned + ".");
     }
 
     @Override

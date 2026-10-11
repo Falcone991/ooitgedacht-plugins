@@ -1,0 +1,27 @@
+name: LobbyGames
+version: '1.0.0'
+main: com.example.lobbygames.LobbyGames
+api-version: '1.21'
+author: Claude
+description: Spelletjes in de lobby - parkour met timer en 1-tegen-1 duels.
+softdepend: [OoitWorlds]
+
+commands:
+  parkour:
+    description: Parkour (beheer stelt de punten in).
+    usage: /parkour [top|terug|stop]
+    aliases: [pk]
+    permission: lobbygames.play
+  duel:
+    description: 1-tegen-1 duel in de lobby-arena.
+    usage: /duel <speler|accept|deny|wachtrij|opgeven|top>
+    aliases: [duels]
+    permission: lobbygames.play
+
+permissions:
+  lobbygames.play:
+    description: Mag parkour en duels spelen.
+    default: true
+  lobbygames.admin:
+    description: Mag de parkour en de duel-arena instellen.
+    default: op

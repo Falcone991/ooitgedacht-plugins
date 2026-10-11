@@ -1,0 +1,42 @@
+# 🌍 Welcome to OoitGedacht SMP!
+
+First things first: **this is a chill server.** Building, playing together, having a good time. Nothing is mandatory. 😊
+
+The season follows a timeline in real-life weeks:
+
+📅 **Week 1** (from Sat Oct 11) – Normal survival. Died? Just respawn.
+🔥 **Week 2** (from Sat Oct 18) – The **Nether** opens.
+🌌 **Week 3** (from Sat Oct 25) – The **End** opens.
+💀 **Week 4** (from Sat Nov 1) – **Hardcore + the Finale.** If you die, you're a spectator until the end of the season.
+
+🧱 The world has a border of **6000 blocks** that grows a tiny bit every in-game day.
+
+Type `/stimeline` in-game to see where we are.
+---
+# ⚔️ The Finale (week 4) – just a fun closer!
+
+The battle royale is **not mandatory**: it's a fun way to close the season, nothing more. You can also just keep building or watch.
+
+🔻 Every evening at **20:00** (Dutch time) the world border shrinks (warning 10 minutes before, the shrinking takes half an hour). After 7 days it's only **50 blocks** wide.
+🚪 The Nether and the End are closed during the finale.
+🗡️ Kill someone and you get **their head** as a trophy.
+⏰ If you're **offline for 24 hours** during the finale, you're out.
+🧭 Coming back and standing outside the border? You get **30 minutes** to walk to it (the way is shown on screen). Walking the wrong way = damage!
+⚠️ Better not log out far outside the play area in the last week 😉
+🏆 The **last survivor wins** OoitGedacht SMP!
+
+**After that?** The world border disappears, hardcore turns off, everyone comes back to life and we just **keep playing survival, without a border.** 🎉
+---
+# 🛠️ Good to know
+
+🏠 **Lobby** – `/lobby` and `/survival`, or click the NPCs
+🧗 **Parkour** – step on the start! `/parkour top` for the fastest times
+🥊 **Duels** – `/duel <name>` or click the duel NPC. Your own items are safe, you get a kit and you never really die.
+🏡 **Homes** – `/sethome [name]`, `/home`, `/homes` (max. 2)
+🤝 **Teleport** – `/tpa <name>` and `/tpahere <name>` (stand still for a moment while teleporting)
+🛏️ **Sleeping** – when half of the players sleep, it becomes morning.
+🪙 **Nuggets** – right-click with a gold, copper or iron nugget for a mini game
+🚫 The **mace** and **spears** are disabled.
+🚩 **Problems?** `/report <player> <reason>` goes straight to the staff.
+
+Have fun and see you on the server! 💚

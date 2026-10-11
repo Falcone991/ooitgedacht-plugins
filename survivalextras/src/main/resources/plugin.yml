@@ -1,5 +1,5 @@
 name: SurvivalExtras
-version: '1.0.0'
+version: '1.1.0'
 main: com.example.survivalextras.SurvivalExtras
 api-version: '1.21'
 author: Claude
@@ -50,6 +50,9 @@ permissions:
   survivalextras.home:
     description: Mag /sethome, /home, /delhome en /homes gebruiken.
     default: true
+  survivalextras.banneditems.bypass:
+    description: Mag uitgeschakelde wapens toch hebben en gebruiken (craften blijft geblokkeerd). Staat standaard voor NIEMAND aan.
+    default: false
   survivalextras.bypassdelay:
     description: Teleporteert meteen, zonder wachttijd of cooldown. Staat standaard voor NIEMAND aan (ook niet voor OP's).
     default: false
