@@ -229,6 +229,14 @@ Wat het doet:
 
 ---
 
+## launcher (OoitGedacht.exe voor spelers)
+Klein Windows-programma met één knop **Spelen**: installeert of werkt Fabric en het modpack
+(`launcher/pack/ooitgedacht.mrpack`, gemaakt van de Modrinth-instance "Ooitgedacht") bij in
+`%APPDATA%\.ooitgedacht`, zet de server in de lijst en maakt het profiel "OoitGedacht SMP" in de
+officiële Minecraft Launcher. Zie [launcher/README.md](launcher/README.md).
+
+---
+
 ## Nog openstaande losse punten uit het gesprek
 - De build-protection straal stond op 100 blokken; er was een (nog niet opgehelderde) melding
   dat een speler toch buiten die straal al kon breken — waarschijnlijk gewoon correct gedrag
