@@ -42,6 +42,13 @@ namespace OoitGedacht
         public UserError(string message) : base(message) { }
     }
 
+    class LauncherMissing : UserError
+    {
+        public LauncherMissing() : base("De Minecraft Launcher is niet gevonden (of nog nooit gestart).\n\n"
+            + "Installeer de officiele Minecraft Launcher, start hem een keer en log in. "
+            + "Druk daarna hier opnieuw op Spelen.\n\nDownloadpagina nu openen?") { }
+    }
+
     class Installer
     {
         public Action<string> Status = delegate { };
@@ -72,9 +79,7 @@ namespace OoitGedacht
         public void Run()
         {
             var profileFiles = ProfileFiles();
-            if (profileFiles.Count == 0)
-                throw new UserError("De Minecraft Launcher is niet gevonden.\n\nInstalleer de officiele Minecraft Launcher (minecraft.net), "
-                    + "start hem een keer en log in. Druk daarna hier opnieuw op Spelen.");
+            if (profileFiles.Count == 0) throw new LauncherMissing();
 
             Status("Modpack ophalen...");
             Progress(2);
@@ -401,6 +406,7 @@ namespace OoitGedacht
             {
                 string error = null;
                 try { installer.Run(); }
+                catch (LauncherMissing ex) { BeginInvoke((Action)(() => AskDownloadLauncher(ex.Message))); return; }
                 catch (UserError ex) { error = ex.Message; }
                 catch (WebException ex) { error = "Kon niet downloaden:\n" + ex.Message + "\n\nCheck je internet en probeer het later opnieuw. Blijft dit gebeuren? Meld het in de Discord."; }
                 catch (Exception ex) { error = "Er ging iets mis:\n" + ex.Message + "\n\nIs Minecraft nog open? Sluit het en probeer opnieuw."; }
@@ -408,11 +414,28 @@ namespace OoitGedacht
             }) { IsBackground = true }.Start();
         }
 
+        void AskDownloadLauncher(string message)
+        {
+            Done(null, false);
+            status.Text = "Eerst de Minecraft Launcher installeren.";
+            if (MessageBox.Show(this, message, "OoitGedacht SMP", MessageBoxButtons.YesNo, MessageBoxIcon.Information) == DialogResult.Yes)
+            {
+                try { Process.Start("https://www.minecraft.net/download"); }
+                catch (Exception) { }
+            }
+        }
+
         void Done(string error)
+        {
+            Done(error, true);
+        }
+
+        void Done(string error, bool finish)
         {
             play.Enabled = true;
             play.BackColor = Green;
             bar.Visible = false;
+            if (!finish) return;
             if (error != null)
             {
                 status.Text = "Niet gelukt. Probeer het opnieuw.";
@@ -445,9 +468,7 @@ namespace OoitGedacht
                 var pf = Environment.GetEnvironmentVariable(env);
                 if (!string.IsNullOrEmpty(pf)) candidates.Add(Path.Combine(pf, @"Minecraft Launcher\MinecraftLauncher.exe"));
             }
-            foreach (var drive in DriveInfo.GetDrives().Where(d => d.DriveType == DriveType.Fixed))
-                candidates.Add(Path.Combine(drive.Name, @"XboxGames\Minecraft Launcher\Content\Minecraft.exe"));
-
+            // de Xbox-app-versie (C:\XboxGames\...\Minecraft.exe) kan niet direct gestart worden, die gaat via shell:AppsFolder hieronder
             foreach (var c in candidates)
             {
                 if (!File.Exists(c)) continue;
