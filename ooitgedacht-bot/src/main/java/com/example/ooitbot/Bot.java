@@ -87,6 +87,7 @@ final class Bot extends ListenerAdapter implements ServerLink.Callbacks {
     private final FunCommands funCommands;
     private final EmbedCommand embedCommand;
     private final EnglishCommand englishCommand = new EnglishCommand();
+    private final LauncherCommand launcherCommand = new LauncherCommand();
     private final Tickets tickets = new Tickets(this);
     private final GitHubFeed gitHubFeed;
 
@@ -436,6 +437,7 @@ final class Bot extends ListenerAdapter implements ServerLink.Callbacks {
         List<SlashCommandData> all = new ArrayList<>(GameCommands.definitions(staffOnly));
         all.add(EmbedCommand.command(staffOnly));
         all.add(EnglishCommand.command());
+        all.add(LauncherCommand.command());
         all.add(Tickets.command());
         if (funCommands != null) all.addAll(FunCommands.commands());
 
@@ -450,6 +452,10 @@ final class Bot extends ListenerAdapter implements ServerLink.Callbacks {
         if (funCommands != null && funCommands.handle(event)) return;
         if (event.getName().equals("english")) {
             englishCommand.handle(event);
+            return;
+        }
+        if (event.getName().equals("launcher")) {
+            launcherCommand.handle(event);
             return;
         }
         if (event.getName().equals("ticket")) {

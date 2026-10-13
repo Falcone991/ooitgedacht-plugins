@@ -198,6 +198,9 @@ Wat het doet:
 - **`/english`**: stuurt de Engelse uitleg over de server privé (DM) naar wie het typt; DM's dicht =
   antwoord dat alleen die persoon ziet. Tekst staat in `english.txt` naast de bot (aanpasbaar, `---` =
   nieuw bericht).
+- **`/launcher`**: knop om `OoitGedacht.exe` te downloaden (nieuwste GitHub-release), met uitleg en
+  een plaatje van de Windows-waarschuwing ("Meer info" → "Toch uitvoeren"). Zichtbaar voor iedereen
+  in het kanaal. Plaatje: `launcher/make-help-image.ps1`.
 - **Tickets**: `/ticket paneel` (beheer) plaatst een bericht met de knop "Ticket openen". Speler vult in
   waar het over gaat en krijgt een eigen privé-kanaal met beheer (staff-rol wordt gepingd); één open
   ticket per speler. "Sluiten" (of `/ticket sluiten`) stuurt een kopie van het gesprek als tekstbestand
