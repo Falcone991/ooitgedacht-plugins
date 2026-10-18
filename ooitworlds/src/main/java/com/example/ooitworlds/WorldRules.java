@@ -57,15 +57,17 @@ final class WorldRules implements Listener {
         return s == null || s.flag(flag);
     }
 
-    /** Elke seconde: tijd vastzetten in werelden met altijd-dag. */
+    /** Elke seconde: tijd vastzetten in werelden met altijd-dag of altijd-nacht. */
     void tick() {
         for (World world : Bukkit.getWorlds()) {
             WorldSettings s = settings(world);
             if (s == null) continue;
-            // Terug naar 12:00 van dezelfde dag (setTime springt vooruit naar de volgende dag).
-            if (s.flag("altijd-dag") && world.getTime() != 6000L) {
+            // 6000 = 12:00, 18000 = middernacht. Terugzetten binnen dezelfde dag
+            // (setTime springt vooruit naar de volgende dag).
+            long fixed = s.flag("altijd-nacht") ? 18000L : s.flag("altijd-dag") ? 6000L : -1L;
+            if (fixed >= 0 && world.getTime() != fixed) {
                 long full = world.getFullTime();
-                world.setFullTime(full - Math.floorMod(full, 24000L) + 6000L);
+                world.setFullTime(full - Math.floorMod(full, 24000L) + fixed);
             }
             if (s.flag("geen-regen") && world.hasStorm()) {
                 world.setStorm(false);

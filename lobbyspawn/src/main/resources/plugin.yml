@@ -30,6 +30,10 @@ commands:
     description: Toon het welkomst-/regelsbericht opnieuw.
     usage: /rules
     permission: lobbyspawn.use
+  team:
+    description: Toon wie er in het team van de server zitten.
+    usage: /team
+    permission: lobbyspawn.use
   survival:
     description: "Teleporteer terug naar je laatste survival-locatie (beheer: /survival open|dicht)."
     usage: /survival [open|dicht]

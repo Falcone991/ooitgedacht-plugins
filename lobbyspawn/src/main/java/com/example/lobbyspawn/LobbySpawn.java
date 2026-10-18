@@ -59,6 +59,7 @@ public class LobbySpawn extends JavaPlugin implements CommandExecutor, Listener 
     private boolean welcomeEnabled;
     private int welcomeDelayTicks;
     private List<String> welcomeLines;
+    private List<String> teamLines;
 
     // Exacte spawn i.p.v. vanilla-randomisatie (uit config.yml)
     private boolean forceExactSpawn;
@@ -70,6 +71,7 @@ public class LobbySpawn extends JavaPlugin implements CommandExecutor, Listener 
     private boolean survivalOpen;
     private final Map<UUID, Long> lastClosedMessage = new HashMap<>();
     private String survivalWorldName;
+    private SurvivalOpening opening;
 
     // Delay-instellingen (uit config.yml)
     private int warmupSeconds;
@@ -105,13 +107,16 @@ public class LobbySpawn extends JavaPlugin implements CommandExecutor, Listener 
         getCommand("spawnprotection").setExecutor(this);
         getCommand("buildprotection").setExecutor(this);
         getCommand("rules").setExecutor(this);
+        getCommand("team").setExecutor(this);
         getCommand("survival").setExecutor(this);
         getCommand("survival").setTabCompleter((sender, cmd, alias, args) ->
                 args.length == 1 && sender.hasPermission("lobbyspawn.admin")
-                        ? java.util.Arrays.asList("open", "dicht").stream().filter(s -> s.startsWith(args[0].toLowerCase())).collect(java.util.stream.Collectors.toList())
+                        ? java.util.Arrays.asList("open", "dicht", "opening").stream().filter(s -> s.startsWith(args[0].toLowerCase())).collect(java.util.stream.Collectors.toList())
                         : java.util.Collections.emptyList());
 
         Bukkit.getPluginManager().registerEvents(this, this);
+        opening = new SurvivalOpening(this);
+        Bukkit.getPluginManager().registerEvents(opening, this);
 
         getLogger().info("LobbySpawn geladen. Lobby ingesteld: " + lobbySet
                 + ", mob-spawnbescherming: " + protectionRadius + " blokken (aan: " + protectionEnabled + ")"
@@ -153,6 +158,7 @@ public class LobbySpawn extends JavaPlugin implements CommandExecutor, Listener 
         welcomeEnabled = c.getBoolean("welcome-message.enabled", true);
         welcomeDelayTicks = c.getInt("welcome-message.delay-ticks", 20);
         welcomeLines = c.getStringList("welcome-message.lines");
+        teamLines = c.getStringList("team-message.lines");
 
         forceExactSpawn = c.getBoolean("world-spawn.force-exact-spawn", true);
 
@@ -217,7 +223,17 @@ public class LobbySpawn extends JavaPlugin implements CommandExecutor, Listener 
         }
     }
 
+    /**
+     * Alleen de survival-wereld zelf plus Nether en End tellen als "survival".
+     * Extra werelden (lobby's, testwerelden) dus niet, anders stuurt /survival
+     * je daar naartoe.
+     */
+    private boolean isSurvivalWorld(World world) {
+        return world.getName().equals(survivalWorldName) || world.getEnvironment() != World.Environment.NORMAL;
+    }
+
     private void saveLastLocation(UUID uuid, Location loc) {
+        if (!isSurvivalWorld(loc.getWorld())) return;
         String path = "players." + uuid;
         data.set(path + ".world", loc.getWorld().getName());
         data.set(path + ".x", loc.getX());
@@ -233,7 +249,7 @@ public class LobbySpawn extends JavaPlugin implements CommandExecutor, Listener 
         if (!data.contains(path + ".world")) return null;
 
         World world = Bukkit.getWorld(data.getString(path + ".world", ""));
-        if (world == null) return null;
+        if (world == null || !isSurvivalWorld(world)) return null; // bv. een oude opgeslagen testlobby
 
         double x = data.getDouble(path + ".x");
         double y = data.getDouble(path + ".y");
@@ -259,9 +275,17 @@ public class LobbySpawn extends JavaPlugin implements CommandExecutor, Listener 
                 return handleBuildProtection(sender, args);
             case "rules":
                 return handleRules(sender);
+            case "team":
+                for (String line : teamLines) {
+                    sender.sendMessage(ChatColor.translateAlternateColorCodes('&', line));
+                }
+                return true;
             case "survival":
                 if (args.length == 1 && (args[0].equalsIgnoreCase("open") || args[0].equalsIgnoreCase("dicht"))) {
                     return handleSurvivalAccess(sender, args[0].equalsIgnoreCase("open"));
+                }
+                if (args.length >= 1 && args[0].equalsIgnoreCase("opening")) {
+                    return handleOpening(sender, args);
                 }
                 return handleSurvival(sender);
             default:
@@ -313,9 +337,52 @@ public class LobbySpawn extends JavaPlugin implements CommandExecutor, Listener 
             sender.sendMessage(ChatColor.YELLOW + "Survival is al " + (open ? "open" : "dicht") + ".");
             return true;
         }
+        setSurvivalOpen(open, sender.getName());
+        if (!open) {
+            sender.sendMessage(ChatColor.YELLOW + "Survival is nu dicht: alleen beheer kan vanuit de lobby naar survival."
+                    + " Openen: /survival open of /survival opening");
+        }
+        return true;
+    }
+
+    private boolean handleOpening(CommandSender sender, String[] args) {
+        if (!sender.hasPermission("lobbyspawn.admin")) {
+            sender.sendMessage(ChatColor.RED + "Je hebt geen rechten voor dit commando.");
+            return true;
+        }
+        if (args.length >= 2 && args[1].equalsIgnoreCase("stop")) {
+            opening.stop(sender);
+            return true;
+        }
+        int seconds = 10;
+        String npcId = null;
+        for (int i = 1; i < args.length; i++) {
+            if (args[i].matches("\\d+")) seconds = Integer.parseInt(args[i]);
+            else npcId = args[i];
+        }
+        if (seconds < 3 || seconds > 600) {
+            sender.sendMessage(ChatColor.RED + "Kies tussen 3 en 600 seconden.");
+            return true;
+        }
+        opening.start(sender, seconds, npcId);
+        return true;
+    }
+
+    boolean isSurvivalOpen() {
+        return survivalOpen;
+    }
+
+    /** Lobby-punt, of null als er nog geen (geladen) lobby is. */
+    Location lobbyLocation() {
+        World world = lobbySet ? Bukkit.getWorld(lobbyWorld) : null;
+        return world == null ? null : new Location(world, lobbyX, lobbyY, lobbyZ, lobbyYaw, lobbyPitch);
+    }
+
+    /** Survival open of dicht zetten; bij openen krijgt iedereen een titel en een melding. */
+    void setSurvivalOpen(boolean open, String by) {
         survivalOpen = open;
         saveSettings();
-        getLogger().info("Survival " + (open ? "geopend" : "dichtgezet") + " door " + sender.getName() + ".");
+        getLogger().info("Survival " + (open ? "geopend" : "dichtgezet") + " door " + by + ".");
 
         if (open) {
             net.kyori.adventure.title.Title title = net.kyori.adventure.title.Title.title(
@@ -329,11 +396,7 @@ public class LobbySpawn extends JavaPlugin implements CommandExecutor, Listener 
             }
             Bukkit.broadcastMessage(ChatColor.GREEN + "" + ChatColor.BOLD + "Survival is open! " + ChatColor.GREEN
                     + "Klik op de NPC of typ /survival om te beginnen.");
-        } else {
-            sender.sendMessage(ChatColor.YELLOW + "Survival is nu dicht: alleen beheer kan vanuit de lobby naar survival."
-                    + " Openen: /survival open");
         }
-        return true;
     }
 
     /**

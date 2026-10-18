@@ -94,6 +94,27 @@ github:
   # DEEL DEZE NOOIT en zet hem nooit in de GitHub-repo zelf.
   token: ""
 
+twitch:
+  # "Nu live"-meldingen. De bot ziet via Discord wie er op Twitch streamt: dat
+  # werkt voor iedereen die Twitch heeft gekoppeld in Discord (Instellingen ->
+  # Verbindingen). Er wordt niemand gepingd.
+  # LET OP: zet eerst in het Discord Developer Portal (tabblad "Bot") de
+  # "Presence Intent" en "Server Members Intent" aan, anders start de bot niet.
+  enabled: false
+  # Kanaal voor de live-berichten.
+  channel-id: ""
+  # Rol die je krijgt zolang je live bent (bv. "NU LIVE"). Leeg = geen rol.
+  # De rol van de bot moet in de rollenlijst BOVEN deze rol staan.
+  live-role-id: ""
+  # Optioneel: alleen leden met deze rol (bv. "Streamer"). Leeg = iedereen.
+  only-role-id: ""
+  # Het bericht. Plekhouders: {naam} {titel} {spel} {link}. \n = nieuwe regel.
+  # Met de link erin laat Discord zelf een voorbeeld van de stream zien.
+  message: ":red_circle: **{naam}** is nu live op Twitch!\n**{titel}**\n{link}"
+  # Pas na zoveel seconden zonder stream telt iemand als gestopt (Discord laat
+  # een stream soms heel even wegvallen; dit voorkomt dubbele berichten).
+  end-grace-seconds: 120
+
 fun:
   # /deaths, /streak, /streaks, /goldnugget, /coppernugget, /ironnugget
   enabled: true

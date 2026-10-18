@@ -45,7 +45,12 @@ Lobby/hub-systeem + spawn-bescherming:
 - `/lobby`, `/setlobby` — teleport naar/instellen van de lobby, met warmup (annuleert bij
   bewegen/schade) en cooldown. Admin-bypass via `lobbyspawn.bypassdelay`.
 - `/spawn` — zelfde systeem, maar naar het spawnpunt van de **survival**-wereld.
-- `/survival` — terug naar je laatst bekende survival-locatie (hub-modus).
+- `/survival` — terug naar je laatst bekende survival-locatie (hub-modus). Alleen de
+  survival-wereld, Nether en End worden onthouden, nooit een lobby- of testwereld.
+- `/survival opening [seconden] [npc]` (beheer) — feestelijke opening: aftellen in beeld voor
+  iedereen (standaard 10 s), daarna gaat survival open met vuurwerk uit de NPC's in de lobby
+  (of alleen uit de gekozen NPC; geen NPC's = bij het lobby-punt). Het vuurwerk doet geen
+  schade. Afbreken: `/survival opening stop`.
 - `/rules` — toont het welkomstbericht opnieuw; wordt ook automatisch getoond bij de
   allereerste keer inloggen (`welcome-message` in config).
 - **Hub-modus** (`hub.enabled`): iedereen start bij inloggen in de lobby; `/survival` brengt
@@ -118,7 +123,7 @@ Alleen voor OP's (`ooitworlds.admin`).
 - `/world tp <naam> [speler]`, `/world list`, `/world setspawn`, `/world load|unload <naam>`.
 - `/world info [naam]` en `/world set <naam> <instelling> <waarde>`: `gamemode`
   (survival/creative/adventure/geen), en aan/uit: `pvp`, `schade`, `honger`, `mobs`, `bouwen`,
-  `portalen`, `altijd-dag`, `geen-regen`, `void-terug`.
+  `portalen`, `altijd-dag`, `altijd-nacht`, `geen-regen`, `void-terug`.
 - `/world preset <naam> lobby` zet alles in één keer goed voor een lobby; `normaal` = vanilla.
 - Gamemode-wissel is hardcore-veilig: de oude gamemode wordt op de speler bewaard en teruggezet
   bij het verlaten; toeschouwers en OP's worden nooit aangepast.
@@ -156,6 +161,10 @@ Spelletjes in de lobby:
   niemand gaat echt dood (veilig in hardcore). Alleen schade van je tegenstander telt; geen commando's
   of droppen tijdens een duel; uitloggen = verliezen; na 5 minuten gelijkspel. Alleen vanuit de
   lobby. `/duel top` = ranglijst. Opslag: `duels.yml`.
+- **Launchpads**: beheer staat op een drukplaat en typt `/launchpad set [vooruit] [omhoog] [vrij]`
+  (standaard 2 en 1; richting = waar je kijkt, of met `vrij` de kijkrichting van de speler). Alleen
+  aangewezen platen lanceren; daarna even geen valschade. `/launchpad remove` (waar je op staat),
+  `/launchpad list`. Opslag: `launchpads.yml`.
 
 ## funitems
 Leuke rechtermuisklik-spelletjes met nuggets (geen commando's):

@@ -78,6 +78,18 @@ spawn-protection:
   # Passieve dieren (koeien, kippen, etc.) worden hier niet door geraakt.
   radius: 100
 
+# Tekst van /team. Elke regel is een chatregel, &-kleurcodes werken.
+# Staat dit stuk niet in jouw config.yml, dan wordt deze standaardtekst gebruikt;
+# wil je hem aanpassen, kopieer dit hele stuk dan naar plugins/LobbySpawn/config.yml.
+team-message:
+  lines:
+    - "&6&l========== &e&lHet team &6&l=========="
+    - "&c&lIamFalcone &7- &fBeheerder"
+    - "&b&lQuint3n &7- &fBuilder van de lobby & beheer"
+    - "&a&ljaadspagaat &7- &fModerator"
+    - "&d&lToppertje1 &7- &fAdviseur"
+    - "&6&l==================================="
+
 # Welkomstbericht dat een speler krijgt bij zijn/haar ALLEREERSTE keer
 # inloggen op de server (gebaseerd op hasPlayedBefore, dus komt maar
 # één keer per speler vanzelf). Kan ook altijd handmatig opgevraagd

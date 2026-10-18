@@ -405,6 +405,9 @@ public class OoitWorlds extends JavaPlugin implements TabExecutor {
                 return;
             }
             s.setFlag(key, on);
+            // Dag en nacht tegelijk kan niet: de ene zet de andere uit.
+            if (on && key.equals("altijd-dag")) s.setFlag("altijd-nacht", false);
+            if (on && key.equals("altijd-nacht")) s.setFlag("altijd-dag", false);
         } else {
             sender.sendMessage(ChatColor.RED + "Onbekende instelling '" + key + "'. Zie /world set.");
             return;

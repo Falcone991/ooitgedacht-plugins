@@ -16,6 +16,7 @@ import org.bukkit.plugin.java.JavaPlugin;
  *    vallen = terug naar je checkpoint.
  *  - Duels: 1-tegen-1 in een arena, met een vaste kit. Je eigen spullen worden zolang
  *    opgeborgen en je gaat nooit echt dood (belangrijk als het hardcore is).
+ *  - Launchpads: aangewezen drukplaten schieten je vooruit de lucht in.
  */
 public class LobbyGames extends JavaPlugin {
 
@@ -35,7 +36,12 @@ public class LobbyGames extends JavaPlugin {
         register("duel", duels);
         Bukkit.getPluginManager().registerEvents(duels, this);
 
-        getLogger().info("LobbyGames geladen. Parkour: " + parkour.describe() + ". Duels: " + duels.describe() + ".");
+        LaunchPads launchPads = new LaunchPads(this);
+        register("launchpad", launchPads);
+        Bukkit.getPluginManager().registerEvents(launchPads, this);
+
+        getLogger().info("LobbyGames geladen. Parkour: " + parkour.describe() + ". Duels: " + duels.describe()
+                + ". Launchpads: " + launchPads.describe() + ".");
     }
 
     @Override

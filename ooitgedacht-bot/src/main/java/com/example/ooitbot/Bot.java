@@ -16,6 +16,11 @@ import net.dv8tion.jda.api.events.interaction.command.CommandAutoCompleteInterac
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.dv8tion.jda.api.events.interaction.component.ButtonInteractionEvent;
 import net.dv8tion.jda.api.events.session.ReadyEvent;
+import net.dv8tion.jda.api.events.user.UserActivityStartEvent;
+import net.dv8tion.jda.api.requests.GatewayIntent;
+import net.dv8tion.jda.api.utils.ChunkingFilter;
+import net.dv8tion.jda.api.utils.MemberCachePolicy;
+import net.dv8tion.jda.api.utils.cache.CacheFlag;
 import net.dv8tion.jda.api.exceptions.ErrorResponseException;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
 import net.dv8tion.jda.api.interactions.commands.DefaultMemberPermissions;
@@ -27,6 +32,7 @@ import java.time.Instant;
 import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.EnumSet;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
@@ -90,6 +96,7 @@ final class Bot extends ListenerAdapter implements ServerLink.Callbacks {
     private final LauncherCommand launcherCommand = new LauncherCommand();
     private final Tickets tickets = new Tickets(this);
     private final GitHubFeed gitHubFeed;
+    private final TwitchLive twitchLive;
 
     private volatile String lastPresence;
     private volatile boolean statusMessageSending;
@@ -161,6 +168,17 @@ final class Bot extends ListenerAdapter implements ServerLink.Callbacks {
             gitHubFeed = null;
         }
 
+        if (config.bool("twitch.enabled", false)) {
+            twitchLive = new TwitchLive(this,
+                    config.id("twitch.channel-id"),
+                    config.id("twitch.live-role-id"),
+                    config.id("twitch.only-role-id"),
+                    config.text("twitch.message", ":red_circle: **{naam}** is nu live op Twitch!\n**{titel}**\n{link}"),
+                    Math.max(30, config.integer("twitch.end-grace-seconds", 120)));
+        } else {
+            twitchLive = null;
+        }
+
         // Bij de allereerste start weten we nog niet sinds wanneer de server slaapt.
         if (data.number("sleeping-since", 0) == 0) data.putNumber("sleeping-since", System.currentTimeMillis());
     }
@@ -172,7 +190,19 @@ final class Bot extends ListenerAdapter implements ServerLink.Callbacks {
 
         // "Light" = zo min mogelijk cache. Slash-commando's hebben geen speciale
         // intents nodig, dus ook geen extra vinkjes in het Developer Portal.
-        jda = JDABuilder.createLight(config.id("bot.token"), Collections.emptyList())
+        JDABuilder builder;
+        if (twitchLive != null) {
+            // Live-meldingen: de bot moet zien wie er streamt. Daarvoor zijn de
+            // "Presence Intent" en "Server Members Intent" in het Developer Portal nodig.
+            builder = JDABuilder.createLight(config.id("bot.token"),
+                            EnumSet.of(GatewayIntent.GUILD_PRESENCES, GatewayIntent.GUILD_MEMBERS))
+                    .setMemberCachePolicy(MemberCachePolicy.ALL)
+                    .setChunkingFilter(ChunkingFilter.ALL)
+                    .enableCache(CacheFlag.ACTIVITY);
+        } else {
+            builder = JDABuilder.createLight(config.id("bot.token"), Collections.emptyList());
+        }
+        jda = builder
                 .setStatus(OnlineStatus.IDLE)
                 .setActivity(activity(presenceSleeping))
                 .addEventListeners(this)
@@ -185,6 +215,9 @@ final class Bot extends ListenerAdapter implements ServerLink.Callbacks {
                     5, statusIntervalSeconds, TimeUnit.SECONDS);
         }
         if (gitHubFeed != null) gitHubFeed.start();
+        if (twitchLive != null) {
+            scheduler.scheduleWithFixedDelay(safe("twitch live", () -> twitchLive.scan(jda, guildId)), 10, 30, TimeUnit.SECONDS);
+        }
 
         Runtime.getRuntime().addShutdownHook(new Thread(this::shutdown, "ooitbot-shutdown"));
         Log.info("OoitGedacht Bot draait. Stoppen: de instance in AMP stoppen.");
@@ -418,6 +451,21 @@ final class Bot extends ListenerAdapter implements ServerLink.Callbacks {
         if (gitHubFeed != null) {
             if (gitHubFeed.channelId().isEmpty()) Log.warn("github.enabled staat aan, maar github.channel-id is leeg.");
             else warnIfMissing("GitHub-kanaal", gitHubFeed.channelId());
+        }
+        if (twitchLive != null) {
+            if (twitchLive.channelId().isEmpty()) Log.warn("twitch.enabled staat aan, maar twitch.channel-id is leeg.");
+            else warnIfMissing("Live-kanaal", twitchLive.channelId());
+            if (guild != null && !twitchLive.roleId().isEmpty() && guild.getRoleById(twitchLive.roleId()) == null) {
+                Log.warn("Live-rol met ID '" + twitchLive.roleId() + "' niet gevonden.");
+            }
+        }
+    }
+
+    /** Iemand begint of stopt een activiteit (zoals streamen): meteen even kijken. */
+    @Override
+    public void onUserActivityStart(UserActivityStartEvent event) {
+        if (twitchLive != null && event.getNewActivity().getType() == Activity.ActivityType.STREAMING) {
+            worker.submit(safe("twitch live", () -> twitchLive.scan(jda, guildId)));
         }
     }
 

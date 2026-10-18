@@ -21,6 +21,7 @@ final class WorldSettings {
         FLAGS.put("bouwen", "spelers (geen OP) kunnen bouwen en slopen");
         FLAGS.put("portalen", "Nether- en End-portalen werken");
         FLAGS.put("altijd-dag", "het is altijd middag");
+        FLAGS.put("altijd-nacht", "het is altijd middernacht");
         FLAGS.put("geen-regen", "het regent of onweert nooit");
         FLAGS.put("void-terug", "wie in de void valt, komt terug op de spawn");
     }
@@ -29,6 +30,7 @@ final class WorldSettings {
     private static boolean defaultFlag(String flag) {
         switch (flag) {
             case "altijd-dag":
+            case "altijd-nacht":
             case "geen-regen":
             case "void-terug":
                 return false;
