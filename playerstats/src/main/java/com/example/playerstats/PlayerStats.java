@@ -82,12 +82,14 @@ public class PlayerStats extends JavaPlugin implements CommandExecutor, Listener
     // hebben opgeteld tot een heel "exploring-per-blocks" punt.
     private final Map<UUID, Double> explorationProgress = new HashMap<>();
     private final Set<UUID> scoreboardShown = new HashSet<>();
+    private FishingLoot fishingLoot;
 
     @Override
     public void onEnable() {
         saveDefaultConfig();
         loadSettings();
         loadData();
+        fishingLoot = new FishingLoot(getConfig().getConfigurationSection("fishing-loot"), getLogger());
 
         getCommand("scoreboard").setExecutor(this);
         getCommand("levels").setExecutor(this);
@@ -268,7 +270,8 @@ public class PlayerStats extends JavaPlugin implements CommandExecutor, Listener
         player.sendMessage(ChatColor.GRAY + "Boeren: " + ChatColor.WHITE + "level " + getLevel(uuid, "farming")
                 + ChatColor.GRAY + " (" + getCategoryXp(uuid, "farming") + " xp)");
         player.sendMessage(ChatColor.GRAY + "Vissen: " + ChatColor.WHITE + "level " + getLevel(uuid, "fishing")
-                + ChatColor.GRAY + " (" + getCategoryXp(uuid, "fishing") + " xp)");
+                + ChatColor.GRAY + " (" + getCategoryXp(uuid, "fishing") + " xp, bonusvangst "
+                + String.format(java.util.Locale.ROOT, "%.0f", fishingLoot.chance(getLevel(uuid, "fishing"))) + "%)");
         player.sendMessage(ChatColor.GRAY + "Verkennen: " + ChatColor.WHITE + "level " + getLevel(uuid, "exploring")
                 + ChatColor.GRAY + " (" + getCategoryXp(uuid, "exploring") + " xp)");
         return true;
@@ -388,7 +391,11 @@ public class PlayerStats extends JavaPlugin implements CommandExecutor, Listener
         if (event.isCancelled()) return;
         if (event.getState() != PlayerFishEvent.State.CAUGHT_FISH) return;
 
-        addCategoryXp(event.getPlayer(), "fishing", fishingPerCatch, "Vissen");
+        addCategoryXp(event.getPlayer(), "fishing", fishingPerCatch * fishingLoot.xpMultiplier(), "Vissen");
+        if (event.getCaught() instanceof org.bukkit.entity.Item) {
+            fishingLoot.onCatch(event.getPlayer(), (org.bukkit.entity.Item) event.getCaught(),
+                    getLevel(event.getPlayer().getUniqueId(), "fishing"));
+        }
     }
 
     // ---------- Events: verkennen ----------

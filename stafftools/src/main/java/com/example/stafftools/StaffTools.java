@@ -3,6 +3,7 @@ package com.example.stafftools;
 import io.papermc.paper.event.player.AsyncChatEvent;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
+import net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.OfflinePlayer;
@@ -16,6 +17,7 @@ import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
+import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
@@ -60,6 +62,9 @@ public class StaffTools extends JavaPlugin implements CommandExecutor, TabComple
     private long refreshIntervalTicks;
     private String sgmPrefix;
     private boolean sgmSoundEnabled;
+    private String staffChatFormat;
+    // Wie /staffchat aan heeft staan: gewone chat gaat dan naar de staffchat
+    private final Set<UUID> staffChatToggled = ConcurrentHashMap.newKeySet();
 
     private String discordWebhookUrl;
     private String discordUsername;
@@ -82,6 +87,33 @@ public class StaffTools extends JavaPlugin implements CommandExecutor, TabComple
         getCommand("prefix").setTabCompleter(this);
         Bukkit.getPluginManager().registerEvents(this, this);
 
+        StaffMode staffMode = new StaffMode(this);
+        for (String name : new String[]{"staffmode", "spectate", "invsee", "endersee"}) {
+            getCommand(name).setExecutor(staffMode);
+            getCommand(name).setTabCompleter(staffMode);
+        }
+        Bukkit.getPluginManager().registerEvents(staffMode, this);
+
+        Brig brig = new Brig(this);
+        getCommand("brig").setExecutor(brig);
+        getCommand("brig").setTabCompleter(brig);
+        Bukkit.getPluginManager().registerEvents(brig, this);
+
+        Trolls trolls = new Trolls(this);
+        for (String name : new String[]{"pumpkin", "chickenrain", "scare"}) {
+            getCommand(name).setExecutor(trolls);
+            getCommand(name).setTabCompleter(trolls);
+        }
+        Bukkit.getPluginManager().registerEvents(trolls, this);
+
+        ServerControl serverControl = new ServerControl(this);
+        for (String name : new String[]{"announce", "herstart"}) {
+            getCommand(name).setExecutor(serverControl);
+            getCommand(name).setTabCompleter(serverControl);
+        }
+        // "/restart" is al van Spigot (doet op AMP niets nuttigs); na het opstarten nemen we hem over.
+        Bukkit.getScheduler().runTask(this, () -> Bukkit.getCommandMap().getKnownCommands().put("restart", getCommand("herstart")));
+
         Bukkit.getScheduler().runTaskTimer(this, this::refreshAllStaffTeams, refreshIntervalTicks, refreshIntervalTicks);
 
         getLogger().info("StaffTools geladen. Discord-webhook: " + (discordWebhookUrl.isEmpty() ? "niet ingesteld" : "ingesteld"));
@@ -94,6 +126,7 @@ public class StaffTools extends JavaPlugin implements CommandExecutor, TabComple
         refreshIntervalTicks = c.getLong("staff.refresh-interval-ticks", 100L);
         sgmPrefix = c.getString("staff.sgm-prefix", "&d&l[Beheer] &r");
         sgmSoundEnabled = c.getBoolean("staff.sgm-sound-enabled", true);
+        staffChatFormat = c.getString("staff.staffchat-format", "&b&l[Staffchat] &c{naam}&7: &f{bericht}");
 
         discordWebhookUrl = c.getString("discord.webhook-url", "");
         discordUsername = c.getString("discord.username", "OoitGedacht SMP");
@@ -314,6 +347,56 @@ public class StaffTools extends JavaPlugin implements CommandExecutor, TabComple
         return result;
     }
 
+    // ---------- /staffchat ----------
+
+    private boolean handleStaffChat(CommandSender sender, String[] args) {
+        if (!sender.hasPermission("stafftools.staff")) {
+            sender.sendMessage(ChatColor.RED + "Je hebt geen rechten voor dit commando.");
+            return true;
+        }
+        if (args.length == 0) {
+            if (!(sender instanceof Player)) {
+                sender.sendMessage(ChatColor.YELLOW + "Gebruik: /staffchat <bericht>");
+                return true;
+            }
+            UUID uuid = ((Player) sender).getUniqueId();
+            if (staffChatToggled.remove(uuid)) {
+                sender.sendMessage(ChatColor.YELLOW + "Staffchat staat uit: je praat weer in de gewone chat.");
+            } else {
+                staffChatToggled.add(uuid);
+                sender.sendMessage(ChatColor.AQUA + "Staffchat staat aan: alles wat je typt gaat alleen naar beheer."
+                        + ChatColor.GRAY + " Uitzetten: /staffchat");
+            }
+            return true;
+        }
+        sendStaffChat(sender instanceof Player ? ((Player) sender).getName() : "Console", String.join(" ", args));
+        return true;
+    }
+
+    /** Bericht naar iedereen met beheer-rechten (en de console). */
+    private void sendStaffChat(String name, String message) {
+        String line = ChatColor.translateAlternateColorCodes('&', staffChatFormat
+                .replace("{naam}", name)
+                .replace("{bericht}", message));
+        for (Player online : Bukkit.getOnlinePlayers()) {
+            if (online.hasPermission("stafftools.staff")) online.sendMessage(line);
+        }
+        getLogger().info("[Staffchat] " + name + ": " + message);
+    }
+
+    /** Staffchat aan? Dan gaat gewone chat niet naar iedereen (ook niet naar Discord), maar alleen naar beheer. */
+    @EventHandler(priority = EventPriority.LOWEST, ignoreCancelled = true)
+    public void onStaffChat(AsyncChatEvent event) {
+        Player player = event.getPlayer();
+        if (!staffChatToggled.contains(player.getUniqueId())) return;
+        if (!player.hasPermission("stafftools.staff")) {
+            staffChatToggled.remove(player.getUniqueId()); // bv. geen OP meer
+            return;
+        }
+        event.setCancelled(true);
+        sendStaffChat(player.getName(), PlainTextComponentSerializer.plainText().serialize(event.message()));
+    }
+
     // ---------- Chat-tag ----------
 
     @EventHandler
@@ -346,6 +429,7 @@ public class StaffTools extends JavaPlugin implements CommandExecutor, TabComple
 
     @EventHandler
     public void onPlayerQuit(PlayerQuitEvent event) {
+        staffChatToggled.remove(event.getPlayer().getUniqueId());
         if (discordLogLeave) {
             sendDiscordMessage("**" + escapeMarkdown(event.getPlayer().getName()) + "** is uitgelogd.");
         }
@@ -360,6 +444,9 @@ public class StaffTools extends JavaPlugin implements CommandExecutor, TabComple
         }
         if (command.getName().equalsIgnoreCase("prefix")) {
             return handlePrefix(sender, args);
+        }
+        if (command.getName().equalsIgnoreCase("staffchat")) {
+            return handleStaffChat(sender, args);
         }
         if (!command.getName().equalsIgnoreCase("report")) return false;
 

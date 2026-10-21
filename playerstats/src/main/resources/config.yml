@@ -52,3 +52,47 @@ leveling:
     # FIREWORKS_SPARK, VILLAGER_HAPPY, END_ROD.
     particle: TOTEM_OF_UNDYING
     particle-count: 30
+
+# Bonusvangst bij het vissen: naast je gewone vangst vis je soms iets extra's op.
+# De kans groeit met je vis-level (zie /levels), en hogere levels openen betere spullen.
+# Kans = base-chance + chance-per-level x level, maar nooit meer dan max-chance (in %).
+# Elk item in de lijst:
+#   item: Minecraft-naam (bv. DIAMOND), of TREASURE_MAP voor een schatkaart naar een
+#         begraven schat in de buurt (geen schat in de buurt = een paar goudstaven).
+#   level: vanaf welk vis-level het kan vallen
+#   weight: hoe vaak (hoger = vaker, vergeleken met de andere items)
+#   amount: aantal, of een bereik zoals 1-3
+#   enchant-levels: (optioneel) willekeurig betoveren alsof op een enchanttafel met zoveel levels
+#   announce: (optioneel) true = iedereen ziet in de chat dat je dit opviste
+#   name: (optioneel) naam in de melding
+fishing-loot:
+  enabled: true
+  # Vis-XP per vangst wordt hiermee vermenigvuldigd (10 = 10 vangsten per level i.p.v. 100).
+  xp-multiplier: 10
+  base-chance: 5
+  chance-per-level: 2
+  max-chance: 35
+  loot:
+    # Level 0+
+    - {item: SLIME_BALL, level: 0, weight: 30, amount: 1-3}
+    - {item: IRON_INGOT, level: 0, weight: 20, amount: 1-3}
+    - {item: GOLD_INGOT, level: 0, weight: 15, amount: 1-2}
+    - {item: NAME_TAG, level: 0, weight: 5}
+    # Level 2+
+    - {item: LAPIS_LAZULI, level: 2, weight: 15, amount: 3-8}
+    - {item: EXPERIENCE_BOTTLE, level: 2, weight: 15, amount: 2-5}
+    - {item: SADDLE, level: 2, weight: 5}
+    - {item: NAUTILUS_SHELL, level: 2, weight: 8}
+    # Level 4+
+    - {item: TREASURE_MAP, level: 4, weight: 6}
+    - {item: ENCHANTED_BOOK, level: 4, weight: 8, enchant-levels: 20}
+    - {item: EMERALD, level: 4, weight: 10, amount: 1-3}
+    # Level 6+
+    - {item: DIAMOND, level: 6, weight: 5}
+    - {item: GOLDEN_APPLE, level: 6, weight: 4}
+    - {item: HEART_OF_THE_SEA, level: 6, weight: 1, announce: true}
+    # Level 8+
+    - {item: DIAMOND, level: 8, weight: 4, amount: 1-3}
+    - {item: ENCHANTED_BOOK, level: 8, weight: 4, enchant-levels: 30}
+    - {item: TRIDENT, level: 8, weight: 1, announce: true}
+    - {item: ENCHANTED_GOLDEN_APPLE, level: 8, weight: 1, announce: true}

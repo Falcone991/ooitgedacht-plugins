@@ -76,6 +76,10 @@ Klein scorebord + basic level-systeem:
   vangst), verkennen (elke X blokken lopen/rennen). Elke categorie eigen XP-teller, elke
   `xp-per-level` punten = 1 level, met titel-animatie + geluid + deeltjes + gratis
   Minecraft-XP bij een level-up.
+- **Bonusvangst bij vissen** (`fishing-loot`): kans op een extra item naast de gewone vangst,
+  groeiend met het vis-level (5% + 2%/level, max 35%); hogere levels openen betere loot
+  (schatkaart naar begraven schat, betoverde boeken, diamanten, zeldzame items met melding voor
+  iedereen). Vis-XP per vangst x `xp-multiplier` (standaard 10). `/levels` toont de kans.
 
 ## stafftools
 Beheer-tools:
@@ -85,6 +89,26 @@ Beheer-tools:
   (met &-kleuren, bv. `&6[VIP]`) in tab, chat en boven het hoofd. Vervangt bij beheer de
   `[Beheer]`-tag. Werkt ook voor offline spelers die al eens online zijn geweest. Permissie
   `stafftools.prefix` (default `op`). Opgeslagen in `plugins/StaffTools/prefixes.yml`.
+- `/staffchat <bericht>` (of `/sc`) — chat die alleen beheer ziet (+ console-log, niet naar
+  Discord). Zonder bericht = aan/uit: dan gaat alles wat je typt naar de staffchat.
+  Opmaak: `staff.staffchat-format`.
+- `/staffmode` (`/sm`) — onzichtbaar meekijken als toeschouwer (ook weg uit de tab-lijst voor
+  gewone spelers); plek en gamemode worden op de speler bewaard (overleeft crash/herstart) en bij
+  uitzetten teruggezet. `/spectate <speler>` (`/spec`) = staffmode aan en naar die speler.
+- `/invsee <speler>` en `/endersee <speler>` — inventory/enderkist van een online speler openen
+  (en aanpassen); wordt in de console gelogd.
+- `/brig <speler> [tijd] [reden]` — speler naar de brig-plek (`/brig set`); niet lopen, wel
+  rondkijken en chatten (+ /msg, /report). Tijd als `30s`, `5m`, `1h` (standaard 5m), aftellen
+  onderin beeld, daarna naar de spawn. Geen schade, bouwen, droppen of teleporteren zolang hij
+  erin zit; tijd loopt door bij uitloggen. `/brig vrij <speler>`, `/brig list`. Opslag: `brig.yml`.
+- Grapjes (onschuldig, gelogd in de console): `/pumpkin <speler> [seconden]` (pompoen op het hoofd,
+  niet af te zetten; eigen helm wordt bewaard en teruggezet, ook na uitloggen/crash),
+  `/chickenrain <speler> [aantal]` (kippen die na 30 s weer verdwijnen),
+  `/scare <speler> [creeper|guardian|ghast|warden]` (schrikgeluid/-beeld alleen voor hem).
+- `/announce <bericht>` (`/mededeling`, `/bc`) — mededeling voor iedereen: chat, titel en geluid.
+- `/restart [tijd] [reden]` (ook `/herstart`) — aftellen met een balk bovenin beeld en meldingen
+  (laatste 10 s groot in beeld), daarna iedereen netjes gekickt en de server stopt; AMP moet hem
+  weer starten. `/restart stop` breekt af. Neemt Spigots eigen `/restart` over.
 - `/report <speler> <reden>` — voor alle spelers; alleen zichtbaar voor beheer (+ console-log).
 - `/sgm <speler> <bericht>` — privébericht van beheer naar een speler (bv. als reactie op een
   report); andere beheer ziet het gesprek mee voor overzicht.

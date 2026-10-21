@@ -97,6 +97,7 @@ final class Bot extends ListenerAdapter implements ServerLink.Callbacks {
     private final Tickets tickets = new Tickets(this);
     private final GitHubFeed gitHubFeed;
     private final TwitchLive twitchLive;
+    private final ServerLogs serverLogs;
 
     private volatile String lastPresence;
     private volatile boolean statusMessageSending;
@@ -179,6 +180,14 @@ final class Bot extends ListenerAdapter implements ServerLink.Callbacks {
             twitchLive = null;
         }
 
+        if (config.bool("server-logs.enabled", true)) {
+            String logsChannel = config.id("server-logs.channel-id");
+            serverLogs = new ServerLogs(this, config.text("server-logs.folder", "").trim(),
+                    logsChannel.isEmpty() ? logChannelId : logsChannel);
+        } else {
+            serverLogs = null;
+        }
+
         // Bij de allereerste start weten we nog niet sinds wanneer de server slaapt.
         if (data.number("sleeping-since", 0) == 0) data.putNumber("sleeping-since", System.currentTimeMillis());
     }
@@ -215,6 +224,15 @@ final class Bot extends ListenerAdapter implements ServerLink.Callbacks {
                     5, statusIntervalSeconds, TimeUnit.SECONDS);
         }
         if (gitHubFeed != null) gitHubFeed.start();
+        if (serverLogs != null) {
+            scheduler.scheduleWithFixedDelay(safe("server-logs", () -> {
+                try {
+                    serverLogs.check();
+                } catch (IOException e) {
+                    Log.warn("Kon server-logs niet controleren: " + e.getMessage());
+                }
+            }), 20, 60, TimeUnit.SECONDS);
+        }
         if (twitchLive != null) {
             scheduler.scheduleWithFixedDelay(safe("twitch live", () -> twitchLive.scan(jda, guildId)), 10, 30, TimeUnit.SECONDS);
         }
@@ -487,6 +505,7 @@ final class Bot extends ListenerAdapter implements ServerLink.Callbacks {
         all.add(EnglishCommand.command());
         all.add(LauncherCommand.command());
         all.add(Tickets.command());
+        if (serverLogs != null) all.add(ServerLogs.command(staffOnly));
         if (funCommands != null) all.addAll(FunCommands.commands());
 
         guild.updateCommands().addCommands(all).queue(
@@ -504,6 +523,14 @@ final class Bot extends ListenerAdapter implements ServerLink.Callbacks {
         }
         if (event.getName().equals("launcher")) {
             launcherCommand.handle(event);
+            return;
+        }
+        if (event.getName().equals("logs") && serverLogs != null) {
+            if (!isStaff(event.getMember())) {
+                event.reply(":x: Alleen de eigenaar en beheerders mogen dit commando gebruiken.").setEphemeral(true).queue();
+                return;
+            }
+            serverLogs.handle(event);
             return;
         }
         if (event.getName().equals("ticket")) {

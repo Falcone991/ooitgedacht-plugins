@@ -18,6 +18,8 @@ staff:
   sgm-prefix: "&d&l[Beheer] &r"
   # Speelt een geluidje af bij de ontvanger zodat het bericht opvalt.
   sgm-sound-enabled: true
+  # Hoe een /staffchat-bericht eruitziet. Plekhouders: {naam} {bericht}.
+  staffchat-format: "&b&l[Staffchat] &c{naam}&7: &f{bericht}"
 
 discord:
   # Maak in Discord een webhook aan: Kanaalinstellingen -> Integraties ->

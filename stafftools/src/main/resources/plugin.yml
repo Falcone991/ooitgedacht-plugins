@@ -14,6 +14,54 @@ commands:
     description: Stuur een priv\u00e9bericht als beheer naar een speler.
     usage: /sgm <speler> <bericht>
     permission: stafftools.staff
+  staffchat:
+    description: Chat die alleen beheer (OP) ziet. Zonder bericht = aan/uit.
+    usage: /staffchat [bericht]
+    aliases: [sc]
+    permission: stafftools.staff
+  staffmode:
+    description: Onzichtbaar meekijken als toeschouwer (aan/uit), daarna terug naar je plek.
+    usage: /staffmode
+    aliases: [sm]
+    permission: stafftools.staff
+  spectate:
+    description: Staffmode aan en meteen naar een speler.
+    usage: /spectate <speler>
+    aliases: [spec]
+    permission: stafftools.staff
+  invsee:
+    description: Bekijk (en pas aan) de inventory van een online speler.
+    usage: /invsee <speler>
+    permission: stafftools.staff
+  endersee:
+    description: Bekijk (en pas aan) de enderkist van een online speler.
+    usage: /endersee <speler>
+    permission: stafftools.staff
+  brig:
+    description: Zet een speler een tijdje vast op de brig-plek (daarna naar spawn).
+    usage: /brig <speler> [tijd] [reden] | vrij <speler> | list | set
+    permission: stafftools.staff
+  pumpkin:
+    description: Zet een pompoen op iemands hoofd (eigen helm komt daarna terug).
+    usage: /pumpkin <speler> [seconden]
+    permission: stafftools.staff
+  chickenrain:
+    description: Laat het kippen regenen boven een speler.
+    usage: /chickenrain <speler> [aantal]
+    permission: stafftools.staff
+  scare:
+    description: Laat een speler schrikken (alleen hij hoort/ziet het).
+    usage: /scare <speler> [creeper|guardian|ghast|warden]
+    permission: stafftools.staff
+  announce:
+    description: Grote mededeling voor iedereen (chat, titel en geluid).
+    usage: /announce <bericht>
+    aliases: [mededeling, bc]
+    permission: stafftools.staff
+  herstart:
+    description: Server herstarten met aftellen (ook via /restart). /restart stop = afbreken.
+    usage: /restart [tijd] [reden] | stop
+    permission: stafftools.staff
   prefix:
     description: Geef een speler een eigen prefix in tab en chat.
     usage: /prefix <set|remove|list> [speler] [prefix]

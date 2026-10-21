@@ -94,6 +94,17 @@ github:
   # DEEL DEZE NOOIT en zet hem nooit in de GitHub-repo zelf.
   token: ""
 
+server-logs:
+  # /logs (alleen beheer): download latest.log, de vorige log of het nieuwste
+  # crash-report als bestand. Daarnaast zet de bot vanzelf elk nieuw crash-report
+  # in het kanaal, en de log van vlak ervoor als de server niet netjes stopte.
+  enabled: true
+  # Kanaal voor die automatische meldingen. Leeg = het log-kanaal (bot.log-channel-id).
+  channel-id: ""
+  # Map van de Minecraft-server (waar 'logs' en 'server.properties' in staan).
+  # Leeg = zelf zoeken naast de bot in AMP (werkt meestal vanzelf).
+  folder: ""
+
 twitch:
   # "Nu live"-meldingen. De bot ziet via Discord wie er op Twitch streamt: dat
   # werkt voor iedereen die Twitch heeft gekoppeld in Discord (Instellingen ->
