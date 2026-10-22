@@ -62,6 +62,8 @@ public class PlayerStats extends JavaPlugin implements CommandExecutor, Listener
     private int xpRewardPerLevel;
     private int miningPerOre;
     private int farmingPerCrop;
+    private int woodcuttingPerLog;
+    private Woodcutting woodcutting;
     private int fishingPerCatch;
     private int exploringPerBlocks;
 
@@ -90,6 +92,8 @@ public class PlayerStats extends JavaPlugin implements CommandExecutor, Listener
         loadSettings();
         loadData();
         fishingLoot = new FishingLoot(getConfig().getConfigurationSection("fishing-loot"), getLogger());
+        woodcutting = new Woodcutting(this, getConfig().getConfigurationSection("woodcutting"));
+        Bukkit.getPluginManager().registerEvents(woodcutting, this);
 
         getCommand("scoreboard").setExecutor(this);
         getCommand("levels").setExecutor(this);
@@ -125,6 +129,7 @@ public class PlayerStats extends JavaPlugin implements CommandExecutor, Listener
         xpRewardPerLevel = c.getInt("leveling.xp-reward-per-level", 25);
         miningPerOre = c.getInt("leveling.points.mining-per-ore", 1);
         farmingPerCrop = c.getInt("leveling.points.farming-per-crop", 1);
+        woodcuttingPerLog = c.getInt("leveling.points.woodcutting-per-log", 3);
         fishingPerCatch = c.getInt("leveling.points.fishing-per-catch", 1);
         exploringPerBlocks = c.getInt("leveling.points.exploring-per-blocks", 50);
 
@@ -220,7 +225,7 @@ public class PlayerStats extends JavaPlugin implements CommandExecutor, Listener
                 + ChatColor.GREEN + "Je bent nu level " + newLevel + " (+" + xpRewardPerLevel + " XP).");
     }
 
-    private int getLevel(UUID uuid, String category) {
+    int getLevel(UUID uuid, String category) {
         return getCategoryXp(uuid, category) / xpPerLevel;
     }
 
@@ -271,9 +276,18 @@ public class PlayerStats extends JavaPlugin implements CommandExecutor, Listener
                 + ChatColor.GRAY + " (" + getCategoryXp(uuid, "farming") + " xp)");
         player.sendMessage(ChatColor.GRAY + "Vissen: " + ChatColor.WHITE + "level " + getLevel(uuid, "fishing")
                 + ChatColor.GRAY + " (" + getCategoryXp(uuid, "fishing") + " xp, bonusvangst "
-                + String.format(java.util.Locale.ROOT, "%.0f", fishingLoot.chance(getLevel(uuid, "fishing"))) + "%)");
+                + String.format(java.util.Locale.ROOT, "%.0f", fishingLoot.chance(getLevel(uuid, "fishing"))) + "% x"
+                + fishingLoot.bonusItems(getLevel(uuid, "fishing")) + ", dubbel "
+                + String.format(java.util.Locale.ROOT, "%.0f", fishingLoot.doubleChance(getLevel(uuid, "fishing"))) + "%)");
         player.sendMessage(ChatColor.GRAY + "Verkennen: " + ChatColor.WHITE + "level " + getLevel(uuid, "exploring")
                 + ChatColor.GRAY + " (" + getCategoryXp(uuid, "exploring") + " xp)");
+        int wood = getLevel(uuid, "woodcutting");
+        int blocks = woodcutting.blocksAt(wood);
+        int next = woodcutting.nextBoostLevel(wood);
+        player.sendMessage(ChatColor.GRAY + "Houthakken: " + ChatColor.WHITE + "level " + wood
+                + ChatColor.GRAY + " (" + getCategoryXp(uuid, "woodcutting") + " xp, "
+                + (blocks > 1 ? blocks + " blokken per hak" : "1 blok per hak")
+                + (next > 0 ? ", meer vanaf level " + next : "") + ")");
         return true;
     }
 
@@ -281,7 +295,7 @@ public class PlayerStats extends JavaPlugin implements CommandExecutor, Listener
 
     private int getTotalLevel(UUID uuid) {
         return getLevel(uuid, "mining") + getLevel(uuid, "farming")
-                + getLevel(uuid, "fishing") + getLevel(uuid, "exploring");
+                + getLevel(uuid, "fishing") + getLevel(uuid, "exploring") + getLevel(uuid, "woodcutting");
     }
 
     private void updateAllScoreboards() {
@@ -322,7 +336,8 @@ public class PlayerStats extends JavaPlugin implements CommandExecutor, Listener
                     .replace("{mining_level}", String.valueOf(getLevel(uuid, "mining")))
                     .replace("{farming_level}", String.valueOf(getLevel(uuid, "farming")))
                     .replace("{fishing_level}", String.valueOf(getLevel(uuid, "fishing")))
-                    .replace("{exploring_level}", String.valueOf(getLevel(uuid, "exploring")));
+                    .replace("{exploring_level}", String.valueOf(getLevel(uuid, "exploring")))
+                    .replace("{woodcutting_level}", String.valueOf(getLevel(uuid, "woodcutting")));
             String line = ChatColor.translateAlternateColorCodes('&', rawLine);
 
             String entry = colors[i % colors.length].toString() + ChatColor.RESET;
@@ -372,6 +387,16 @@ public class PlayerStats extends JavaPlugin implements CommandExecutor, Listener
         Block block = event.getBlock();
         if (ORES.contains(block.getType())) {
             addCategoryXp(event.getPlayer(), "mining", miningPerOre, "Mijnen");
+            return;
+        }
+
+        if (Woodcutting.isLog(block.getType())) {
+            Player player = event.getPlayer();
+            if (player.getGameMode() == org.bukkit.GameMode.SURVIVAL || player.getGameMode() == org.bukkit.GameMode.ADVENTURE) {
+                if (woodcutting.isFelling(player.getUniqueId()) || Woodcutting.isTreeLog(block)) {
+                    addCategoryXp(player, "woodcutting", woodcuttingPerLog, "Houthakken");
+                }
+            }
             return;
         }
 

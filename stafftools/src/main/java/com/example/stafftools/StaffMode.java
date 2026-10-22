@@ -13,7 +13,14 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
+import org.bukkit.event.entity.PlayerDeathEvent;
+import org.bukkit.event.inventory.InventoryOpenEvent;
+import org.bukkit.event.inventory.InventoryType;
+import org.bukkit.event.player.PlayerDropItemEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
+import org.bukkit.inventory.ItemStack;
+import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.format.NamedTextColor;
 import org.bukkit.persistence.PersistentDataContainer;
 import org.bukkit.persistence.PersistentDataType;
 import org.bukkit.plugin.java.JavaPlugin;
@@ -41,12 +48,18 @@ final class StaffMode implements TabExecutor, Listener {
     private final NamespacedKey activeKey;
     private final NamespacedKey locationKey;
     private final NamespacedKey gameModeKey;
+    private final NamespacedKey creativeKey;
+    private final NamespacedKey creativeStateKey;
+    private final NamespacedKey creativeLocationKey;
 
     StaffMode(JavaPlugin plugin) {
         this.plugin = plugin;
         activeKey = new NamespacedKey(plugin, "staffmode");
         locationKey = new NamespacedKey(plugin, "staffmode_location");
         gameModeKey = new NamespacedKey(plugin, "staffmode_gamemode");
+        creativeKey = new NamespacedKey(plugin, "staffcreative_inventory");
+        creativeStateKey = new NamespacedKey(plugin, "staffcreative_state");
+        creativeLocationKey = new NamespacedKey(plugin, "staffcreative_location");
     }
 
     boolean isActive(Player player) {
@@ -68,10 +81,26 @@ final class StaffMode implements TabExecutor, Listener {
         Player staff = (Player) sender;
         switch (command.getName().toLowerCase(Locale.ROOT)) {
             case "staffmode":
+                if (isCreative(staff)) {
+                    staff.sendMessage(ChatColor.RED + "Zet eerst staffcreative uit: /staffcreative");
+                    return true;
+                }
                 if (isActive(staff)) disable(staff);
                 else enable(staff);
                 return true;
+            case "staffcreative":
+                if (isActive(staff)) {
+                    staff.sendMessage(ChatColor.RED + "Zet eerst staffmode uit: /staffmode");
+                    return true;
+                }
+                if (isCreative(staff)) disableCreative(staff);
+                else enableCreative(staff);
+                return true;
             case "spectate": {
+                if (isCreative(staff)) {
+                    staff.sendMessage(ChatColor.RED + "Zet eerst staffcreative uit: /staffcreative");
+                    return true;
+                }
                 Player target = target(staff, args, "/spectate <speler>");
                 if (target == null) return true;
                 if (!isActive(staff)) enable(staff);
@@ -118,7 +147,8 @@ final class StaffMode implements TabExecutor, Listener {
 
     @Override
     public List<String> onTabComplete(CommandSender sender, Command command, String alias, String[] args) {
-        if (!sender.hasPermission(PERMISSION) || args.length != 1 || command.getName().equalsIgnoreCase("staffmode")) {
+        if (!sender.hasPermission(PERMISSION) || args.length != 1 || command.getName().equalsIgnoreCase("staffmode")
+                || command.getName().equalsIgnoreCase("staffcreative")) {
             return Collections.emptyList();
         }
         List<String> result = new ArrayList<>();
@@ -164,6 +194,90 @@ final class StaffMode implements TabExecutor, Listener {
         plugin.getLogger().info("[Staffmode] " + staff.getName() + " zet staffmode uit.");
     }
 
+    // ---------- Staffcreative: tijdelijk creative met een lege inventory ----------
+
+    boolean isCreative(Player player) {
+        return player.getPersistentDataContainer().has(creativeKey, PersistentDataType.BYTE_ARRAY);
+    }
+
+    /** Survival-spullen (en plek, XP, levens, honger) opbergen op de speler zelf, dan leeg creative. */
+    private void enableCreative(Player staff) {
+        PersistentDataContainer pdc = staff.getPersistentDataContainer();
+        ItemStack[] contents = staff.getInventory().getContents();
+        for (int i = 0; i < contents.length; i++) if (contents[i] == null) contents[i] = ItemStack.empty();
+        pdc.set(creativeKey, PersistentDataType.BYTE_ARRAY, ItemStack.serializeItemsAsBytes(contents));
+        pdc.set(creativeStateKey, PersistentDataType.STRING, staff.getGameMode().name() + ";" + staff.getLevel() + ";"
+                + staff.getExp() + ";" + staff.getHealth() + ";" + staff.getFoodLevel() + ";" + staff.getSaturation());
+        Location loc = staff.getLocation();
+        pdc.set(creativeLocationKey, PersistentDataType.STRING, loc.getWorld().getName() + ";" + loc.getX() + ";"
+                + loc.getY() + ";" + loc.getZ() + ";" + loc.getYaw() + ";" + loc.getPitch());
+
+        staff.getInventory().clear();
+        staff.setGameMode(GameMode.CREATIVE);
+        staff.sendMessage(ChatColor.AQUA + "Staffcreative aan: je survival-spullen zijn veilig opgeborgen."
+                + ChatColor.GRAY + " Terug: /staffcreative (creative-spullen verdwijnen dan, je gaat terug naar deze plek).");
+        plugin.getLogger().info("[Staffcreative] " + staff.getName() + " zet staffcreative aan.");
+    }
+
+    /** Creative-spullen weg, survival-spullen en alles terug, terug naar de plek van vóór creative. */
+    private void disableCreative(Player staff) {
+        PersistentDataContainer pdc = staff.getPersistentDataContainer();
+        byte[] saved = pdc.get(creativeKey, PersistentDataType.BYTE_ARRAY);
+        String[] state = pdc.getOrDefault(creativeStateKey, PersistentDataType.STRING, "SURVIVAL").split(";");
+        Location back = parseLocation(pdc.get(creativeLocationKey, PersistentDataType.STRING));
+
+        staff.getInventory().clear();
+        staff.setItemOnCursor(null);
+        if (back != null) staff.teleport(back);
+        GameMode mode = GameMode.SURVIVAL;
+        try {
+            mode = GameMode.valueOf(state[0]);
+        } catch (IllegalArgumentException ignored) {
+            // standaard survival
+        }
+        staff.setGameMode(mode == GameMode.CREATIVE ? GameMode.SURVIVAL : mode);
+        if (saved != null) staff.getInventory().setContents(ItemStack.deserializeItemsFromBytes(saved));
+        try {
+            staff.setLevel(Integer.parseInt(state[1]));
+            staff.setExp(Float.parseFloat(state[2]));
+            staff.setHealth(Math.min(Double.parseDouble(state[3]), staff.getMaxHealth()));
+            staff.setFoodLevel(Integer.parseInt(state[4]));
+            staff.setSaturation(Float.parseFloat(state[5]));
+        } catch (RuntimeException ignored) {
+            // oude/onvolledige gegevens: dan alleen de spullen terug
+        }
+        pdc.remove(creativeKey);
+        pdc.remove(creativeStateKey);
+        pdc.remove(creativeLocationKey);
+        staff.sendMessage(ChatColor.YELLOW + "Staffcreative uit: je survival-spullen zijn terug.");
+        plugin.getLogger().info("[Staffcreative] " + staff.getName() + " zet staffcreative uit.");
+    }
+
+    /** Creative-spullen mogen niet in survival belanden: niet droppen, niet in kisten stoppen. */
+    @EventHandler(ignoreCancelled = true)
+    public void onCreativeDrop(PlayerDropItemEvent event) {
+        if (!isCreative(event.getPlayer())) return;
+        event.setCancelled(true);
+        event.getPlayer().sendActionBar(Component.text("In staffcreative kun je geen spullen droppen.", NamedTextColor.RED));
+    }
+
+    @EventHandler(ignoreCancelled = true)
+    public void onCreativeOpen(InventoryOpenEvent event) {
+        if (!(event.getPlayer() instanceof Player) || !isCreative((Player) event.getPlayer())) return;
+        InventoryType type = event.getInventory().getType();
+        if (type == InventoryType.PLAYER || type == InventoryType.CRAFTING || type == InventoryType.CREATIVE
+                || type == InventoryType.WORKBENCH) return;
+        event.setCancelled(true);
+        ((Player) event.getPlayer()).sendActionBar(Component.text("In staffcreative kun je geen kisten openen.", NamedTextColor.RED));
+    }
+
+    @EventHandler
+    public void onCreativeDeath(PlayerDeathEvent event) {
+        if (!isCreative(event.getEntity())) return;
+        event.getDrops().clear(); // creative-spullen niet laten vallen; survival-spullen zitten veilig opgeborgen
+        event.setDroppedExp(0);
+    }
+
     private void hideFromPlayers(Player staff) {
         for (Player other : Bukkit.getOnlinePlayers()) {
             if (!other.equals(staff) && !other.hasPermission(PERMISSION)) other.hidePlayer(plugin, staff);
@@ -194,6 +308,17 @@ final class StaffMode implements TabExecutor, Listener {
             for (Player staff : Bukkit.getOnlinePlayers()) {
                 if (isActive(staff)) joined.hidePlayer(plugin, staff);
             }
+        }
+        if (isCreative(joined)) {
+            Bukkit.getScheduler().runTaskLater(plugin, () -> {
+                if (!joined.isOnline() || !isCreative(joined)) return;
+                if (!joined.hasPermission(PERMISSION)) {
+                    disableCreative(joined); // geen beheer meer: spullen terug
+                    return;
+                }
+                joined.setGameMode(GameMode.CREATIVE);
+                joined.sendMessage(ChatColor.AQUA + "Je staat nog in staffcreative." + ChatColor.GRAY + " Uitzetten: /staffcreative");
+            }, 10L);
         }
         if (isActive(joined)) {
             Bukkit.getScheduler().runTaskLater(plugin, () -> {

@@ -67,6 +67,8 @@ final class Bot extends ListenerAdapter implements ServerLink.Callbacks {
     private final String guildId;
     private final String logChannelId;
     private final String chatChannelId;
+    private final String announceChannelId;
+    private final String announceRoleId;
     private final String statusChannelId;
     private final String staffRoleId;
     private final String alertRoleId;
@@ -110,6 +112,8 @@ final class Bot extends ListenerAdapter implements ServerLink.Callbacks {
         guildId = config.id("bot.guild-id");
         logChannelId = config.id("bot.log-channel-id");
         chatChannelId = config.id("bot.chat-channel-id");
+        announceChannelId = config.id("bot.announce-channel-id");
+        announceRoleId = config.id("bot.announce-role-id");
         statusChannelId = config.id("bot.status-channel-id");
         staffRoleId = config.id("bot.staff-role-id");
         alertRoleId = config.id("bot.alert-role-id");
@@ -315,7 +319,12 @@ final class Bot extends ListenerAdapter implements ServerLink.Callbacks {
     // ---------- Logs van de server doorsturen ----------
 
     private void relay(JsonNode ev) {
-        String target = "chat".equals(ev.path("channel").asText()) && !chatChannelId.isEmpty() ? chatChannelId : logChannelId;
+        String kind = ev.path("channel").asText();
+        String target = logChannelId;
+        if ("chat".equals(kind) && !chatChannelId.isEmpty()) target = chatChannelId;
+        if ("announce".equals(kind)) {
+            target = !announceChannelId.isEmpty() ? announceChannelId : !chatChannelId.isEmpty() ? chatChannelId : logChannelId;
+        }
         TextChannel channel = channel(target);
         if (channel == null) return;
 
@@ -336,6 +345,10 @@ final class Bot extends ListenerAdapter implements ServerLink.Callbacks {
             return;
         }
 
+        if ("announce".equals(kind)) {
+            send(channel, embed, announceRoleId.isEmpty() ? null : announceRoleId);
+            return;
+        }
         String alertType = textOrNull(ev, "alert");
         boolean ping = alertType != null && !alertRoleId.isEmpty() && pingOn.contains(alertType)
                 && !recentlyPinged(alertType + ":" + ev.path("subject").asText(""));

@@ -76,10 +76,18 @@ Klein scorebord + basic level-systeem:
   vangst), verkennen (elke X blokken lopen/rennen). Elke categorie eigen XP-teller, elke
   `xp-per-level` punten = 1 level, met titel-animatie + geluid + deeltjes + gratis
   Minecraft-XP bij een level-up.
+- **Houthakken** (5e categorie): `woodcutting-per-log` (3) XP per houtblok van een echte boom
+  (natuurlijke bladeren in de buurt; zelf neergezet hout telt niet). Met een bijl hak je vanaf
+  level 15 tot 8 blokken van dezelfde boom tegelijk, vanaf level 30 de hele boom (max 100);
+  bukken = één blok. Via `player.breakBlock`, dus bijl slijt en bescherming telt mee.
+  Instellingen onder `woodcutting:`. Plekhouder `{woodcutting_level}`.
 - **Bonusvangst bij vissen** (`fishing-loot`): kans op een extra item naast de gewone vangst,
-  groeiend met het vis-level (5% + 2%/level, max 35%); hogere levels openen betere loot
-  (schatkaart naar begraven schat, betoverde boeken, diamanten, zeldzame items met melding voor
-  iedereen). Vis-XP per vangst x `xp-multiplier` (standaard 10). `/levels` toont de kans.
+  groeiend met het vis-level (10% + 2%/level, max 45%), met een item extra per bonusvangst vanaf
+  level 10/20 (`extra-item-levels`) en kans op een dubbele gewone vangst (1%/level, max 15%).
+  Grote lijst (~50 items); hogere levels openen betere loot (schatkaart, betoverde boeken (gemaakt
+  vanuit een gewoon boek, zoals een enchanttafel), diamanten, heel zeldzaam netherite scrap vanaf
+  level 15, zeldzame items met melding voor iedereen). Vis-XP per vangst x
+  `xp-multiplier` (standaard 10). `/levels` toont kans, aantal items en dubbele-vangstkans.
 
 ## stafftools
 Beheer-tools:
@@ -95,6 +103,10 @@ Beheer-tools:
 - `/staffmode` (`/sm`) — onzichtbaar meekijken als toeschouwer (ook weg uit de tab-lijst voor
   gewone spelers); plek en gamemode worden op de speler bewaard (overleeft crash/herstart) en bij
   uitzetten teruggezet. `/spectate <speler>` (`/spec`) = staffmode aan en naar die speler.
+- `/staffcreative` (`/scr`) — tijdelijk creative met een lege inventory. Survival-spullen, XP,
+  levens, honger en plek worden op de speler bewaard (overleeft crash/herstart); bij uitzetten
+  verdwijnen de creative-spullen en komt alles terug. In staffcreative geen items droppen, geen
+  kisten openen en niets laten vallen bij doodgaan, zodat er geen creative-spullen in survival komen.
 - `/invsee <speler>` en `/endersee <speler>` — inventory/enderkist van een online speler openen
   (en aanpassen); wordt in de console gelogd.
 - `/brig <speler> [tijd] [reden]` — speler naar de brig-plek (`/brig set`); niet lopen, wel
@@ -133,6 +145,16 @@ Drie losse onderdelen, elk aan/uit te zetten in de config:
   gebruiken of op te pakken, mobs krijgen ze niet, en bestaande exemplaren verdwijnen bij inloggen
   of na het sluiten van een kist. Uitzondering via `survivalextras.banneditems.bypass`.
 - `survivalextras.bypassdelay` (meteen teleporteren) staat voor niemand aan, ook niet voor OP's.
+- **Loot drop** (`/lootdrop start|hier|stop|info [tijd]`, OP): na een aftelling (standaard 5 min)
+  landt er een kist (bliksem-effect, vuurwerk) met decoratie-hoofden (MHF_-hoofden en hoofden van
+  online spelers) en handige spullen (`loot-drop.loot`). Iedereen ziet coördinaten, een balk bovenin
+  beeld en een lichtstraal; wie hem als eerste opent wordt genoemd; leeg = kist weg, na 30 min
+  verdwijnt hij. Willekeurige plek op land binnen de wereldgrens, niet bij spawn.
+  Eenmalig event: `/lootdrop plan <UU:MM> [aftellen]` kondigt het meteen aan (game + Discord),
+  herinnert in de game (30/10/5/1 min), en op het tijdstip komen de coördinaten (ook in Discord)
+  en landt hij na het aftellen. Bewaard in `lootdrop.yml`; sliep de server, dan start hij bij
+  wakker worden (tot 2 uur te laat). `/lootdrop plan annuleer`. Discord-meldingen gaan via
+  `discordbridge announce` naar `bot.announce-channel-id` (optionele ping: `bot.announce-role-id`).
 
 ## ooitworlds
 Eigen, simpele "Multiverse": extra werelden (zoals een aparte lobby) maken en laden, met regels
@@ -168,6 +190,11 @@ bouwt tegen de 26.3-API (`paper-api 26.3.build.*`) en heeft Java 25 nodig.
   `geen` = weg), skin van een Minecraft-speler.
 - `/npc move|tp|info|remove|respawn <naam>`, `/npc look <naam> <aan|uit>` (hoofd draait naar
   spelers in de buurt), `/npc list`.
+- Dier-NPC: `/npc create <naam> dier <soort>` (elk levend wezen behalve speler/bazen, bv. fox, cat,
+  parrot, villager, axolotl). `/npc dier <naam> <soort>`, `/npc variant <naam> <variant|geen>`
+  (vos, kat, papegaai, axolotl, konijn, paard, lama, schaap-kleur, kikker, wolf, villager-beroep),
+  `/npc baby <naam> aan|uit`, `/npc sit <naam> aan|uit` (kat, hond, papegaai, vos). Geen AI, stil,
+  brandt niet in de zon, kijkt naar spelers (`/npc look`); naam/tekst als zwevende tekst erboven.
 - Onkwetsbaar, beweegt niet, geen drops. Raakt een NPC kwijt (bv. `/kill`), dan wordt hij vanzelf
   opnieuw neergezet. Opgeslagen in `plugins/OoitNPCs/npcs.yml`.
 
@@ -185,6 +212,15 @@ Spelletjes in de lobby:
   niemand gaat echt dood (veilig in hardcore). Alleen schade van je tegenstander telt; geen commando's
   of droppen tijdens een duel; uitloggen = verliezen; na 5 minuten gelijkspel. Alleen vanuit de
   lobby. `/duel top` = ranglijst. Opslag: `duels.yml`.
+- **Hot Potato** (tikkertje met een bom, eigen eiland): `/hotpotato join` (`/hp`, ook via een NPC:
+  `/npc action <naam> speler hotpotato join`), `leave`, `top`. Vanaf `min-players` (3) telt het af,
+  dan krijgt iemand de bom (TNT boven het hoofd, gloeit, sneller). Slaan = bom doorgeven (niet
+  meteen terug). Na een geheime tijd (15-30 s) ontploft hij: die ligt eruit en gaat terug. Laatste
+  over wint (melding, vuurwerk, `hotpotato.yml`). Eigen spullen en XP worden opgeborgen (ook op
+  schijf, `hotpotato-saves.yml`, voor een crash) en daarna teruggegeven; in het spel een lege
+  inventory, de bomhouder een hotbar vol TNT. Geen schade, niet droppen, van het eiland af = terug
+  naar het midden, ergens anders heen = uit het spel. Beheer: `setspawn`,
+  `pos1`/`pos2` (grens), `info`, `forcestop`. Niet tegelijk met een duel.
 - **Launchpads**: beheer staat op een drukplaat en typt `/launchpad set [vooruit] [omhoog] [vrij]`
   (standaard 2 en 1; richting = waar je kijkt, of met `vrij` de kijkrichting van de speler). Alleen
   aangewezen platen lanceren; daarna even geen valschade. `/launchpad remove` (waar je op staat),

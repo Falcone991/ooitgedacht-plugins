@@ -16,6 +16,10 @@ bot:
   log-channel-id: ""
   # In-game chat. Leeg = chat gaat ook naar het log-kanaal.
   chat-channel-id: ""
+  # Aankondigingen van de server (bv. een loot drop-event). Leeg = het chat-kanaal.
+  announce-channel-id: ""
+  # Optioneel: rol die bij zo'n aankondiging gepingd wordt (bv. "Events"). Leeg = niemand pingen.
+  announce-role-id: ""
   # Kanaal met het live statusbericht.
   status-channel-id: ""
   # Optioneel: ID van een rol die óók /msg, /kick, /ban, /unban en /embed mag gebruiken.

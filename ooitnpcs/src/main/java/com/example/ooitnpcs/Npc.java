@@ -17,7 +17,9 @@ final class Npc {
         /** Speler-figuur met skin (Minecraft "mannequin"). */
         SPELER,
         /** Zwevend, draaiend voorwerp (bv. een wereldbol-hoofd), met een onzichtbare klikbox. */
-        ITEM
+        ITEM,
+        /** Een dier of ander wezen (vos, kat, villager, ...) dat stil staat. */
+        DIER
     }
 
     /** Wat er gebeurt bij een klik. */
@@ -46,6 +48,10 @@ final class Npc {
     ItemStack item = null;       // ITEM: wat er zweeft
     float size = 1.5f;           // ITEM: grootte in blokken
     boolean spin = true;         // ITEM: langzaam ronddraaien
+    String mob = "fox";          // DIER: soort (Minecraft-naam, bv. fox, cat, villager)
+    boolean baby = false;        // DIER: kleine versie
+    String variant = null;       // DIER: variant/kleur (bv. snow, black, red); null = standaard
+    boolean sit = false;         // DIER: zitten (kat, hond, papegaai, vos)
     ActionType action = ActionType.GEEN;
     String actionValue = "";
 
@@ -111,6 +117,10 @@ final class Npc {
         }
         npc.size = (float) s.getDouble("size", 1.5);
         npc.spin = s.getBoolean("spin", true);
+        npc.mob = s.getString("mob", "fox");
+        npc.baby = s.getBoolean("baby", false);
+        npc.variant = s.getString("variant");
+        npc.sit = s.getBoolean("sit", false);
         try {
             npc.action = ActionType.valueOf(s.getString("action", "GEEN"));
         } catch (IllegalArgumentException e) {
@@ -133,6 +143,12 @@ final class Npc {
         s.set("text", text);
         if (kind == Kind.SPELER) {
             s.set("skin", skin);
+            s.set("look", look);
+        } else if (kind == Kind.DIER) {
+            s.set("mob", mob);
+            s.set("baby", baby);
+            s.set("variant", variant);
+            s.set("sit", sit);
             s.set("look", look);
         } else {
             s.set("item", item == null ? null : Base64.getEncoder().encodeToString(item.serializeAsBytes()));

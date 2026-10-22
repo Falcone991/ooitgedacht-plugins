@@ -8,7 +8,6 @@ import org.bukkit.GameMode;
 import org.bukkit.Location;
 import org.bukkit.Sound;
 import org.bukkit.entity.Entity;
-import org.bukkit.entity.Interaction;
 import org.bukkit.entity.ItemDisplay;
 import org.bukkit.entity.Mannequin;
 import org.bukkit.entity.Player;
@@ -147,12 +146,12 @@ final class NpcListener implements Listener {
                     npc.display = e.getUniqueId();
                 }
             }
-            boolean complete = mainFound && (npc.kind == Npc.Kind.SPELER || displayFound);
+            boolean complete = mainFound && (npc.kind != Npc.Kind.ITEM || displayFound);
 
             if (complete && belongsHere) {
-                // Dubbele hoofd-entity's (oude kopieën) opruimen.
+                // Dubbele hoofd-entity's (oude kopieën) opruimen; tekst en voorwerp (Display) horen erbij.
                 for (Entity e : parts) {
-                    if ((e instanceof Mannequin || e instanceof Interaction) && !e.getUniqueId().equals(npc.entity)) e.remove();
+                    if (!(e instanceof org.bukkit.entity.Display) && !e.getUniqueId().equals(npc.entity)) e.remove();
                 }
             } else {
                 for (Entity e : parts) e.remove();
@@ -163,11 +162,15 @@ final class NpcListener implements Listener {
 
     // ---------- Meekijken (speler-NPC's) ----------
 
-    /** Elke 4 ticks: speler-NPC's draaien hun hoofd naar de dichtstbijzijnde speler. */
+    /** Elke 4 ticks: speler-NPC's en dieren kijken naar de dichtstbijzijnde speler. */
     void lookTick() {
         for (Npc npc : plugin.npcs.values()) {
-            if (npc.kind != Npc.Kind.SPELER || !npc.look) continue;
+            if (npc.kind == Npc.Kind.ITEM || !npc.look) continue;
             Entity entity = plugin.entityOf(npc);
+            if (npc.kind == Npc.Kind.DIER && entity != null) {
+                animalLook(npc, entity);
+                continue;
+            }
             if (!(entity instanceof Mannequin)) continue;
             Mannequin m = (Mannequin) entity;
 
@@ -188,6 +191,38 @@ final class NpcListener implements Listener {
                 m.setRotation(npc.yaw, npc.pitch);
             }
         }
+    }
+
+    /** Dier zonder AI: zelf de kijkrichting naar de dichtstbijzijnde speler uitrekenen. */
+    private void animalLook(Npc npc, Entity e) {
+        Location eye = e instanceof org.bukkit.entity.LivingEntity ? ((org.bukkit.entity.LivingEntity) e).getEyeLocation() : e.getLocation();
+        Player nearest = null;
+        double best = LOOK_RADIUS * LOOK_RADIUS;
+        for (Player p : e.getWorld().getPlayers()) {
+            if (p.getGameMode() == GameMode.SPECTATOR) continue;
+            double d = p.getLocation().distanceSquared(eye);
+            if (d < best) {
+                best = d;
+                nearest = p;
+            }
+        }
+        if (nearest == null) {
+            if (Math.abs(e.getLocation().getYaw() - npc.yaw) > 0.5f) e.setRotation(npc.yaw, 0);
+            return;
+        }
+        Location target = nearest.getEyeLocation();
+        double dx = target.getX() - eye.getX();
+        double dy = target.getY() - eye.getY();
+        double dz = target.getZ() - eye.getZ();
+        float yaw = (float) Math.toDegrees(Math.atan2(-dx, dz));
+        float pitch = (float) -Math.toDegrees(Math.atan2(dy, Math.sqrt(dx * dx + dz * dz)));
+        e.setRotation(yaw, pitch);
+    }
+
+    /** Dier-NPC's (bv. een zombie) gaan niet branden in de zon. */
+    @EventHandler(ignoreCancelled = true)
+    public void onCombust(org.bukkit.event.entity.EntityCombustEvent event) {
+        if (plugin.idOf(event.getEntity()) != null) event.setCancelled(true);
     }
 
     // ---------- Ronddraaien (voorwerp-NPC's) ----------

@@ -43,7 +43,15 @@ commands:
     usage: /homes
     permission: survivalextras.home
 
+  lootdrop:
+    description: Loot drop-event (kist met decoratie en handige spullen).
+    usage: /lootdrop <plan|start|hier|stop|info> [tijd]
+    permission: survivalextras.lootdrop
+
 permissions:
+  survivalextras.lootdrop:
+    description: Mag loot drops starten en stoppen.
+    default: op
   survivalextras.tpa:
     description: Mag /tpa, /tpahere, /tpaccept, /tpdeny en /tpacancel gebruiken.
     default: true

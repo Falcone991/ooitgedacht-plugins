@@ -45,6 +45,10 @@ final class FishingLoot {
     private final double chancePerLevel;
     private final double maxChance;
     private final int xpMultiplier;
+    private final double doubleChancePerLevel;
+    private final double maxDoubleChance;
+    private final List<Integer> extraItemLevels;
+    private final int despawnSeconds;
     private final List<Entry> entries = new ArrayList<>();
     private final Random random = new Random();
 
@@ -55,6 +59,10 @@ final class FishingLoot {
         chancePerLevel = c == null ? 0 : c.getDouble("chance-per-level", 2);
         maxChance = c == null ? 0 : c.getDouble("max-chance", 35);
         xpMultiplier = c == null ? 1 : Math.max(1, c.getInt("xp-multiplier", 10));
+        doubleChancePerLevel = c == null ? 0 : c.getDouble("double-catch-per-level", 1.5);
+        maxDoubleChance = c == null ? 0 : c.getDouble("double-catch-max", 30);
+        extraItemLevels = c == null ? new ArrayList<>() : c.getIntegerList("extra-item-levels");
+        despawnSeconds = c == null ? 0 : c.getInt("despawn-seconds", 60);
         if (c == null) return;
         for (Map<?, ?> raw : c.getMapList("loot")) {
             Entry e = new Entry();
@@ -95,10 +103,34 @@ final class FishingLoot {
         return enabled ? Math.min(maxChance, baseChance + chancePerLevel * level) : 0;
     }
 
-    /** Na een gewone vangst: misschien iets extra's erbij, dat met de vangst mee naar je toe vliegt. */
-    void onCatch(Player player, Item caught, int level) {
-        if (!enabled || entries.isEmpty() || random.nextDouble() * 100 >= chance(level)) return;
+    /** Kans (in procenten) dat je gewone vangst dubbel is. */
+    double doubleChance(int level) {
+        return enabled ? Math.min(maxDoubleChance, doubleChancePerLevel * level) : 0;
+    }
 
+    /** Hoeveel bonus-items je per bonusvangst krijgt bij dit level. */
+    int bonusItems(int level) {
+        int n = 1;
+        for (int l : extraItemLevels) if (level >= l) n++;
+        return n;
+    }
+
+    /** Na een gewone vangst: misschien dubbel, en misschien iets extra's dat mee naar je toe vliegt. */
+    void onCatch(Player player, Item caught, int level) {
+        if (!enabled) return;
+        if (random.nextDouble() * 100 < doubleChance(level)) {
+            Item copy = caught.getWorld().dropItem(caught.getLocation(), caught.getItemStack().clone());
+            copy.setVelocity(caught.getVelocity());
+            copy.setOwner(player.getUniqueId());
+            despawnSooner(copy);
+            player.sendActionBar(LegacyComponentSerializer.legacyAmpersand().deserialize("&a&lDubbele vangst!"));
+        }
+        if (entries.isEmpty() || random.nextDouble() * 100 >= chance(level)) return;
+        int count = bonusItems(level);
+        for (int i = 0; i < count; i++) giveBonus(player, caught, level);
+    }
+
+    private void giveBonus(Player player, Item caught, int level) {
         List<Entry> options = new ArrayList<>();
         int total = 0;
         for (Entry e : entries) {
@@ -121,8 +153,9 @@ final class FishingLoot {
         ItemStack item = create(chosen, player.getLocation());
         if (item == null) return;
         Item bonus = caught.getWorld().dropItem(caught.getLocation(), item);
-        bonus.setVelocity(caught.getVelocity());
+        bonus.setVelocity(caught.getVelocity().clone().multiply(0.9 + random.nextDouble() * 0.2));
         bonus.setOwner(player.getUniqueId());
+        despawnSooner(bonus);
 
         String label = chosen.name != null ? chosen.name : niceName(item.getType());
         String amount = item.getAmount() > 1 ? item.getAmount() + "x " : "";
@@ -152,9 +185,44 @@ final class FishingLoot {
         if (material == null) return null;
         ItemStack item = new ItemStack(material, Math.min(amount, material.getMaxStackSize()));
         if (e.enchantLevels > 0) {
-            item = Bukkit.getItemFactory().enchantWithLevels(item, e.enchantLevels, true, random);
+            // Een betoverd boek maak je (net als op een enchanttafel) vanuit een gewoon boek.
+            ItemStack base = material == Material.ENCHANTED_BOOK ? new ItemStack(Material.BOOK) : item;
+            item = Bukkit.getItemFactory().enchantWithLevels(base, e.enchantLevels, false, random);
+            if (material == Material.ENCHANTED_BOOK && !hasEnchant(item)) item = randomBook();
         }
         return item;
+    }
+
+    /**
+     * Niet opgepakt? Dan sneller weg dan de gewone 5 minuten. Een item verdwijnt bij
+     * leeftijd 6000 ticks; we laten hem dus "ouder" beginnen.
+     */
+    private void despawnSooner(Item item) {
+        if (despawnSeconds <= 0 || despawnSeconds >= 300) return;
+        item.setTicksLived(Math.max(1, 6000 - despawnSeconds * 20));
+    }
+
+    private static boolean hasEnchant(ItemStack item) {
+        if (item.getItemMeta() instanceof org.bukkit.inventory.meta.EnchantmentStorageMeta) {
+            return ((org.bukkit.inventory.meta.EnchantmentStorageMeta) item.getItemMeta()).hasStoredEnchants();
+        }
+        return !item.getEnchantments().isEmpty();
+    }
+
+    /** Vangnet: boek met één willekeurige betovering op een laag level. */
+    private ItemStack randomBook() {
+        ItemStack book = new ItemStack(Material.ENCHANTED_BOOK);
+        org.bukkit.inventory.meta.EnchantmentStorageMeta meta = (org.bukkit.inventory.meta.EnchantmentStorageMeta) book.getItemMeta();
+        List<org.bukkit.enchantments.Enchantment> all = new ArrayList<>();
+        for (org.bukkit.enchantments.Enchantment ench : org.bukkit.Registry.ENCHANTMENT) {
+            if (!ench.isTreasure() && !ench.isCursed()) all.add(ench);
+        }
+        if (all.isEmpty()) return book;
+        org.bukkit.enchantments.Enchantment pick = all.get(random.nextInt(all.size()));
+        int level = 1 + random.nextInt(Math.max(1, Math.min(2, pick.getMaxLevel())));
+        meta.addStoredEnchant(pick, level, false);
+        book.setItemMeta(meta);
+        return book;
     }
 
     private static String niceName(Material material) {

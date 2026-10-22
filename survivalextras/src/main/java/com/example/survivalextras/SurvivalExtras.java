@@ -56,6 +56,17 @@ public class SurvivalExtras extends JavaPlugin {
             banned = bannedItems.count() + (bannedItems.onlyCrafting() ? " (alleen craften)" : "");
         }
 
+        String drops = "uit";
+        if (c.getBoolean("loot-drop.enabled", true)) {
+            LootDrop lootDrop = new LootDrop(this, c.getConfigurationSection("loot-drop"));
+            Bukkit.getPluginManager().registerEvents(lootDrop, this);
+            register(lootDrop, "lootdrop");
+            drops = lootDrop.describe();
+        } else {
+            disable("lootdrop");
+        }
+
+        getLogger().info("Loot drops: " + drops + ".");
         getLogger().info("SurvivalExtras geladen. Slapen: " + c.getBoolean("sleep.enabled", true)
                 + " (" + c.getInt("sleep.percentage", 50) + "%), tpa: " + c.getBoolean("tpa.enabled", true)
                 + ", homes: " + c.getBoolean("homes.enabled", true) + " (max " + c.getInt("homes.max-homes", 2) + ")"

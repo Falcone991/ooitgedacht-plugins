@@ -16,11 +16,13 @@ import org.bukkit.plugin.java.JavaPlugin;
  *    vallen = terug naar je checkpoint.
  *  - Duels: 1-tegen-1 in een arena, met een vaste kit. Je eigen spullen worden zolang
  *    opgeborgen en je gaat nooit echt dood (belangrijk als het hardcore is).
+ *  - Hot Potato: tikkertje met een bom op een eigen eiland; wie hem heeft als hij ontploft, ligt eruit.
  *  - Launchpads: aangewezen drukplaten schieten je vooruit de lucht in.
  */
 public class LobbyGames extends JavaPlugin {
 
     private Duels duels;
+    private HotPotato hotPotato;
 
     @Override
     public void onEnable() {
@@ -36,17 +38,25 @@ public class LobbyGames extends JavaPlugin {
         register("duel", duels);
         Bukkit.getPluginManager().registerEvents(duels, this);
 
+        HotPotato hotPotato = new HotPotato(this);
+        register("hotpotato", hotPotato);
+        Bukkit.getPluginManager().registerEvents(hotPotato, this);
+        hotPotato.setOtherGame(duels::isBusy);
+        duels.setOtherGame(hotPotato::isIn);
+        this.hotPotato = hotPotato;
+
         LaunchPads launchPads = new LaunchPads(this);
         register("launchpad", launchPads);
         Bukkit.getPluginManager().registerEvents(launchPads, this);
 
         getLogger().info("LobbyGames geladen. Parkour: " + parkour.describe() + ". Duels: " + duels.describe()
-                + ". Launchpads: " + launchPads.describe() + ".");
+                + ". Hot Potato: " + hotPotato.describe() + ". Launchpads: " + launchPads.describe() + ".");
     }
 
     @Override
     public void onDisable() {
         if (duels != null) duels.shutdown();
+        if (hotPotato != null) hotPotato.shutdown();
     }
 
     private void register(String name, TabExecutor executor) {

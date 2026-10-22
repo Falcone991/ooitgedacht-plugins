@@ -16,3 +16,14 @@ duel:
   max-seconds: 300
   # Hoe lang (seconden) je na het einde nog in de arena staat, voor je terug gaat.
   end-delay-seconds: 3
+
+hotpotato:
+  # Met hoeveel spelers het spel begint (minimaal 2).
+  min-players: 3
+  # Aftellen (seconden) zodra er genoeg spelers zijn; anderen kunnen dan nog meedoen.
+  start-countdown: 15
+  # Hoe lang (seconden) een ronde duurt voordat de bom ontploft: willekeurig hiertussen (geheim!).
+  round-min-seconds: 15
+  round-max-seconds: 30
+  # Hoe snel je de bom opnieuw kan doorgeven (milliseconden), tegen meteen terugslaan.
+  pass-cooldown-ms: 750

@@ -88,7 +88,7 @@ public class StaffTools extends JavaPlugin implements CommandExecutor, TabComple
         Bukkit.getPluginManager().registerEvents(this, this);
 
         StaffMode staffMode = new StaffMode(this);
-        for (String name : new String[]{"staffmode", "spectate", "invsee", "endersee"}) {
+        for (String name : new String[]{"staffmode", "staffcreative", "spectate", "invsee", "endersee"}) {
             getCommand(name).setExecutor(staffMode);
             getCommand(name).setTabCompleter(staffMode);
         }

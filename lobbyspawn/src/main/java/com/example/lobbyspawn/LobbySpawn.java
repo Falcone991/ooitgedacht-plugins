@@ -824,6 +824,10 @@ public class LobbySpawn extends JavaPlugin implements CommandExecutor, Listener 
     public void onCreatureSpawn(CreatureSpawnEvent event) {
         if (!protectionEnabled || protectionRadius <= 0) return;
         if (!(event.getEntity() instanceof Monster)) return; // alleen vijandige mobs blokkeren
+        // Bewust neergezet (bv. een zombie-NPC of door beheer): niet blokkeren.
+        if (event.getSpawnReason() == CreatureSpawnEvent.SpawnReason.CUSTOM
+                || event.getSpawnReason() == CreatureSpawnEvent.SpawnReason.COMMAND
+                || event.getSpawnReason() == CreatureSpawnEvent.SpawnReason.SPAWNER_EGG) return;
 
         World world = event.getLocation().getWorld();
         if (world == null) return;

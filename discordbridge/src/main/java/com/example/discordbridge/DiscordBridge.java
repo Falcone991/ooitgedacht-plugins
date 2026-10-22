@@ -229,6 +229,18 @@ public class DiscordBridge extends JavaPlugin implements Listener {
             sender.sendMessage(ChatColor.RED + "Dit commando is alleen voor de Discord-bot.");
             return true;
         }
+        // Aankondiging van een andere plugin (bv. een event): discordbridge announce <kleur-hex> <base64-titel> <base64-tekst>
+        if (args.length == 4 && args[0].equalsIgnoreCase("announce")) {
+            try {
+                Base64.Decoder b64 = Base64.getDecoder();
+                enqueue(event("announce", Integer.parseInt(args[1], 16),
+                        new String(b64.decode(args[2]), StandardCharsets.UTF_8),
+                        new String(b64.decode(args[3]), StandardCharsets.UTF_8)));
+            } catch (IllegalArgumentException e) {
+                sender.sendMessage("Ongeldige aankondiging: " + e.getMessage());
+            }
+            return true;
+        }
         if (args.length != 2 || !args[0].equalsIgnoreCase("rpc")) {
             sender.sendMessage("Gebruik: /discordbridge rpc <base64-JSON> (intern voor de Discord-bot)");
             return true;
@@ -259,6 +271,8 @@ public class DiscordBridge extends JavaPlugin implements Listener {
             case "kick": return rpcKick(str(req, "by"), str(req, "player"), reasonOrDefault(str(req, "reason")));
             case "ban": return rpcBan(str(req, "by"), str(req, "player"), reasonOrDefault(str(req, "reason")));
             case "unban": return rpcUnban(str(req, "by"), str(req, "player"));
+            case "message": return rpcBroadcast(str(req, "by"), str(req, "message"));
+            case "restart": return rpcRestart(str(req, "by"), str(req, "time"), str(req, "reason"));
             default:
                 return result(false, ":x: Onbekend verzoek '" + op + "'. Zijn de bot en de plugin allebei bijgewerkt?");
         }
@@ -420,6 +434,33 @@ public class DiscordBridge extends JavaPlugin implements Listener {
         return result(true, ":white_check_mark: Bericht verstuurd naar **" + md(target.getName()) + "**.");
     }
 
+    /** Bericht vanuit Discord voor iedereen in de game. */
+    private JsonObject rpcBroadcast(String by, String message) {
+        if (message.isBlank()) return result(false, ":x: Leeg bericht.");
+        Bukkit.broadcast(legacy("&9[Discord] &b" + by + "&7: ").append(Component.text(message)));
+        for (Player p : Bukkit.getOnlinePlayers()) p.playSound(p.getLocation(), Sound.BLOCK_NOTE_BLOCK_CHIME, 0.7f, 1.2f);
+        getLogger().info("[Discord] " + by + " aan iedereen: " + message);
+        logDiscordAction(":loudspeaker: Bericht aan iedereen via Discord", by, "-", "Bericht", message);
+        int online = Bukkit.getOnlinePlayers().size();
+        return result(true, ":white_check_mark: Bericht verstuurd naar iedereen in de game (" + online
+                + (online == 1 ? " speler" : " spelers") + " online).");
+    }
+
+    /** Herstart met aftellen via StaffTools (/herstart), anders meteen netjes stoppen. */
+    private JsonObject rpcRestart(String by, String time, String reason) {
+        String args = (time.isBlank() ? "1m" : time.trim()) + (reason.isBlank() ? "" : " " + reason.trim());
+        if (Bukkit.getPluginCommand("herstart") != null) {
+            Bukkit.dispatchCommand(Bukkit.getConsoleSender(), "herstart " + args);
+            logDiscordAction(":arrows_counterclockwise: Herstart via Discord", by, "-", "Over", args);
+            return result(true, ":white_check_mark: De server herstart over **" + (time.isBlank() ? "1m" : time.trim())
+                    + "** (met aftellen in de game). Afbreken kan in de game met `/restart stop`.");
+        }
+        Bukkit.broadcast(legacy("&cDe server wordt herstart via Discord door " + by + "."));
+        Bukkit.getScheduler().runTaskLater(this, Bukkit::shutdown, 100L);
+        logDiscordAction(":arrows_counterclockwise: Herstart via Discord", by, "-", "Over", "5 seconden");
+        return result(true, ":white_check_mark: StaffTools niet gevonden; de server stopt over 5 seconden.");
+    }
+
     private JsonObject rpcKick(String by, String targetName, String reason) {
         Player target = Bukkit.getPlayerExact(targetName);
         if (target == null) return result(false, ":x: **" + md(targetName) + "** is niet online.");
@@ -463,7 +504,7 @@ public class DiscordBridge extends JavaPlugin implements Listener {
 
     // ---------- Wachtrij met logs ----------
 
-    /** Basis-log. channel = "log" of "chat"; title/description mogen null zijn. */
+    /** Basis-log. channel = "log", "chat" of "announce"; title/description mogen null zijn. */
     private static JsonObject event(String channel, int color, String title, String description) {
         JsonObject e = new JsonObject();
         e.addProperty("channel", channel);

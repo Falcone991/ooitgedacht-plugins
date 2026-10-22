@@ -24,6 +24,11 @@ commands:
     usage: /staffmode
     aliases: [sm]
     permission: stafftools.staff
+  staffcreative:
+    description: Tijdelijk creative met een lege inventory; je survival-spullen blijven veilig.
+    usage: /staffcreative
+    aliases: [screative, scr]
+    permission: stafftools.staff
   spectate:
     description: Staffmode aan en meteen naar een speler.
     usage: /spectate <speler>

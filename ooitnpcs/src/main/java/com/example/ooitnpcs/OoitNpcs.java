@@ -155,6 +155,35 @@ public class OoitNpcs extends JavaPlugin implements TabExecutor {
                 m.setRemoveWhenFarAway(false);
                 applyLooks(npc, m);
             });
+        } else if (npc.kind == Npc.Kind.DIER) {
+            org.bukkit.entity.EntityType type = Animals.type(npc.mob);
+            if (type == null || type.getEntityClass() == null) return null;
+            @SuppressWarnings("unchecked")
+            Class<Entity> entityClass = (Class<Entity>) type.getEntityClass();
+            main = world.spawn(loc, entityClass, e -> {
+                tag(e, npc);
+                e.setInvulnerable(true);
+                e.setSilent(true);
+                e.setGravity(false);
+                if (e instanceof org.bukkit.entity.LivingEntity) {
+                    org.bukkit.entity.LivingEntity le = (org.bukkit.entity.LivingEntity) e;
+                    le.setAI(false);
+                    le.setRemoveWhenFarAway(false);
+                    le.setCollidable(false);
+                }
+                if (npc.variant != null) Animals.applyVariant(e, npc.variant);
+                Animals.applyPose(e, npc.baby, npc.sit);
+            });
+            if (!npc.name.isEmpty() || npc.text != null) {
+                Location top = loc.clone().add(0, main.getHeight() + 0.3, 0);
+                world.spawn(top, TextDisplay.class, t -> {
+                    tag(t, npc);
+                    t.text(label(npc));
+                    t.setBillboard(Display.Billboard.CENTER);
+                    t.setAlignment(TextDisplay.TextAlignment.CENTER);
+                    t.setShadowed(true);
+                });
+            }
         } else {
             float s = npc.size;
             // Onzichtbare klikbox, even groot als het voorwerp.
@@ -216,8 +245,8 @@ public class OoitNpcs extends JavaPlugin implements TabExecutor {
         if (e instanceof Mannequin) {
             applyLooks(npc, (Mannequin) e);
             saveFile();
-        } else if (npc.kind == Npc.Kind.ITEM && e != null) {
-            spawn(npc); // voorwerp-NPC bestaat uit meerdere delen: gewoon opnieuw neerzetten
+        } else if (npc.kind != Npc.Kind.SPELER && e != null) {
+            spawn(npc); // voorwerp/dier bestaat uit meerdere delen: gewoon opnieuw neerzetten
         } else {
             saveFile();
         }
@@ -263,7 +292,7 @@ public class OoitNpcs extends JavaPlugin implements TabExecutor {
             return true;
         }
         if (!Arrays.asList("remove", "info", "name", "text", "skin", "action", "move", "tp", "look", "respawn",
-                "item", "size", "spin").contains(sub)) {
+                "item", "size", "spin", "dier", "baby", "variant", "sit").contains(sub)) {
             help(sender);
             return true;
         }
@@ -275,8 +304,13 @@ public class OoitNpcs extends JavaPlugin implements TabExecutor {
         String rest = args.length > 2 ? String.join(" ", Arrays.copyOfRange(args, 2, args.length)) : "";
 
         boolean isItem = npc.kind == Npc.Kind.ITEM;
-        if ((sub.equals("skin") || sub.equals("look")) && isItem) {
-            sender.sendMessage(ChatColor.RED + "Dat kan alleen bij een speler-NPC. Voor een voorwerp: /npc item, size of spin.");
+        boolean isAnimal = npc.kind == Npc.Kind.DIER;
+        if ((sub.equals("skin") && npc.kind != Npc.Kind.SPELER) || (sub.equals("look") && isItem)) {
+            sender.sendMessage(ChatColor.RED + "Dat kan alleen bij een speler-NPC" + (sub.equals("look") ? " of dier" : "") + ".");
+            return true;
+        }
+        if (Arrays.asList("dier", "baby", "variant", "sit").contains(sub) && !isAnimal) {
+            sender.sendMessage(ChatColor.RED + "Dat kan alleen bij een dier-NPC (gemaakt met /npc create <naam> dier <soort>).");
             return true;
         }
         if ((sub.equals("item") || sub.equals("size") || sub.equals("spin")) && !isItem) {
@@ -396,6 +430,67 @@ public class OoitNpcs extends JavaPlugin implements TabExecutor {
                 sender.sendMessage(ChatColor.GREEN + "Draaien " + (on ? "aan" : "uit") + ".");
                 break;
             }
+            case "dier": {
+                org.bukkit.entity.EntityType type = rest.isEmpty() ? null : Animals.type(rest);
+                if (type == null) {
+                    sender.sendMessage(ChatColor.YELLOW + "Gebruik: /npc dier <naam> <soort>  (bv. fox, cat, parrot, villager; tab voor de lijst)");
+                    return true;
+                }
+                npc.mob = type.getKey().getKey();
+                npc.variant = null; // varianten verschillen per soort
+                refresh(npc);
+                sender.sendMessage(ChatColor.GREEN + "Het is nu een " + npc.mob + ".");
+                break;
+            }
+            case "baby": {
+                Boolean on = rest.equalsIgnoreCase("aan") ? Boolean.TRUE : rest.equalsIgnoreCase("uit") ? Boolean.FALSE : null;
+                org.bukkit.entity.EntityType type = Animals.type(npc.mob);
+                if (on == null) {
+                    sender.sendMessage(ChatColor.YELLOW + "Gebruik: /npc baby <naam> <aan|uit>");
+                    return true;
+                }
+                if (type == null || !Animals.canBeBaby(type)) {
+                    sender.sendMessage(ChatColor.RED + "Een " + npc.mob + " heeft geen baby-versie.");
+                    return true;
+                }
+                npc.baby = on;
+                refresh(npc);
+                sender.sendMessage(ChatColor.GREEN + "Baby " + (on ? "aan" : "uit") + ".");
+                break;
+            }
+            case "sit": {
+                Boolean on = rest.equalsIgnoreCase("aan") ? Boolean.TRUE : rest.equalsIgnoreCase("uit") ? Boolean.FALSE : null;
+                org.bukkit.entity.EntityType type = Animals.type(npc.mob);
+                if (on == null) {
+                    sender.sendMessage(ChatColor.YELLOW + "Gebruik: /npc sit <naam> <aan|uit>");
+                    return true;
+                }
+                if (type == null || !Animals.canSit(type)) {
+                    sender.sendMessage(ChatColor.RED + "Een " + npc.mob + " kan niet zitten (wel: kat, hond, papegaai, vos).");
+                    return true;
+                }
+                npc.sit = on;
+                refresh(npc);
+                sender.sendMessage(ChatColor.GREEN + "Zitten " + (on ? "aan" : "uit") + ".");
+                break;
+            }
+            case "variant": {
+                org.bukkit.entity.EntityType type = Animals.type(npc.mob);
+                List<String> options = type == null ? Collections.emptyList() : Animals.variants(type);
+                if (options.isEmpty()) {
+                    sender.sendMessage(ChatColor.RED + "Een " + npc.mob + " heeft geen varianten.");
+                    return true;
+                }
+                if (rest.isEmpty() || (!rest.equalsIgnoreCase("geen") && !options.contains(rest.toLowerCase(Locale.ROOT)))) {
+                    sender.sendMessage(ChatColor.YELLOW + "Gebruik: /npc variant <naam> <variant|geen>");
+                    sender.sendMessage(ChatColor.GRAY + "Kan: " + String.join(", ", options));
+                    return true;
+                }
+                npc.variant = rest.equalsIgnoreCase("geen") ? null : rest.toLowerCase(Locale.ROOT);
+                refresh(npc);
+                sender.sendMessage(ChatColor.GREEN + "Variant: " + (npc.variant == null ? "standaard" : npc.variant) + ".");
+                break;
+            }
             case "respawn":
                 if (npc.location() == null) {
                     sender.sendMessage(ChatColor.RED + "De wereld van deze NPC is niet geladen.");
@@ -414,6 +509,7 @@ public class OoitNpcs extends JavaPlugin implements TabExecutor {
         sender.sendMessage(ChatColor.GOLD + "=== OoitNPCs ===");
         line(sender, "/npc create <naam> [skin-speler]", "speler-NPC maken waar je staat");
         line(sender, "/npc create <naam> item", "zwevend voorwerp uit je hand (bv. wereldbol-hoofd)");
+        line(sender, "/npc create <naam> dier <soort>", "dier/wezen (fox, cat, parrot, villager, ...)");
         line(sender, "/npc action <naam> speler <commando>", "klik = commando als speler, bv. survival");
         line(sender, "/npc action <naam> wereld <wereld>", "klik = naar de spawn van een wereld");
         line(sender, "/npc action <naam> console <commando>", "klik = console-commando, {player} = wie klikt");
@@ -426,6 +522,7 @@ public class OoitNpcs extends JavaPlugin implements TabExecutor {
         line(sender, "/npc item <naam>", "voorwerp-NPC: ander voorwerp (uit je hand)");
         line(sender, "/npc size <naam> <grootte>", "voorwerp-NPC: grootte in blokken (0.25 t/m 6)");
         line(sender, "/npc spin <naam> <aan|uit>", "voorwerp-NPC: langzaam ronddraaien");
+        line(sender, "/npc dier | variant | baby | sit <naam> ...", "dier-NPC: soort, kleur/variant, klein, zitten");
         line(sender, "/npc list | info | tp | remove | respawn <naam>", "overzicht en beheer");
     }
 
@@ -454,6 +551,11 @@ public class OoitNpcs extends JavaPlugin implements TabExecutor {
         if (npc.kind == Npc.Kind.SPELER) {
             sender.sendMessage(ChatColor.GRAY + "Soort: " + ChatColor.WHITE + "speler" + ChatColor.GRAY + ", skin: "
                     + ChatColor.WHITE + (npc.skin == null ? "(standaard)" : npc.skin));
+        } else if (npc.kind == Npc.Kind.DIER) {
+            sender.sendMessage(ChatColor.GRAY + "Soort: " + ChatColor.WHITE + "dier (" + npc.mob + ")" + ChatColor.GRAY
+                    + ", variant: " + ChatColor.WHITE + (npc.variant == null ? "standaard" : npc.variant) + ChatColor.GRAY
+                    + ", baby: " + ChatColor.WHITE + (npc.baby ? "ja" : "nee") + ChatColor.GRAY
+                    + ", zit: " + ChatColor.WHITE + (npc.sit ? "ja" : "nee"));
         } else {
             sender.sendMessage(ChatColor.GRAY + "Soort: " + ChatColor.WHITE + "voorwerp ("
                     + (npc.item == null ? "?" : npc.item.getType().getKey().getKey()) + ")" + ChatColor.GRAY
@@ -462,7 +564,7 @@ public class OoitNpcs extends JavaPlugin implements TabExecutor {
         sender.sendMessage(ChatColor.GRAY + "Klik: " + ChatColor.WHITE + describeAction(npc));
         sender.sendMessage(ChatColor.GRAY + "Plek: " + ChatColor.WHITE + npc.world + " " + (int) Math.floor(npc.x) + ", "
                 + (int) Math.floor(npc.y) + ", " + (int) Math.floor(npc.z));
-        sender.sendMessage(ChatColor.GRAY + (npc.kind == Npc.Kind.SPELER ? "Meekijken: " + ChatColor.WHITE + (npc.look ? "aan" : "uit") + ChatColor.GRAY + ", n" : "N")
+        sender.sendMessage(ChatColor.GRAY + (npc.kind != Npc.Kind.ITEM ? "Meekijken: " + ChatColor.WHITE + (npc.look ? "aan" : "uit") + ChatColor.GRAY + ", n" : "N")
                 + "u in de wereld: " + ChatColor.WHITE + (entityOf(npc) != null ? "ja" : "niet geladen"));
     }
 
@@ -476,9 +578,16 @@ public class OoitNpcs extends JavaPlugin implements TabExecutor {
     }
 
     private void create(CommandSender sender, String[] args) {
-        if (args.length < 2 || args.length > 3) {
+        boolean animal = args.length >= 3 && args[2].equalsIgnoreCase("dier");
+        if (args.length < 2 || args.length > (animal ? 4 : 3)) {
             sender.sendMessage(ChatColor.YELLOW + "Gebruik: /npc create <naam> [skin-speler]" + ChatColor.GRAY + "  - speler-NPC");
             sender.sendMessage(ChatColor.YELLOW + "         /npc create <naam> item" + ChatColor.GRAY + "  - zwevend voorwerp uit je hand");
+            sender.sendMessage(ChatColor.YELLOW + "         /npc create <naam> dier <soort>" + ChatColor.GRAY + "  - dier, bv. fox of cat");
+            return;
+        }
+        org.bukkit.entity.EntityType animalType = animal && args.length == 4 ? Animals.type(args[3]) : null;
+        if (animal && animalType == null) {
+            sender.sendMessage(ChatColor.RED + "Geef een soort op, bv. /npc create " + args[1] + " dier fox (tab voor de lijst).");
             return;
         }
         boolean item = args.length == 3 && args[2].equalsIgnoreCase("item");
@@ -497,7 +606,7 @@ public class OoitNpcs extends JavaPlugin implements TabExecutor {
             sender.sendMessage(ChatColor.RED + "Er bestaat al een NPC '" + id + "'.");
             return;
         }
-        if (args.length == 3 && !item && !args[2].matches("[A-Za-z0-9_]{1,16}")) {
+        if (args.length == 3 && !item && !animal && !args[2].matches("[A-Za-z0-9_]{1,16}")) {
             sender.sendMessage(ChatColor.RED + "Dat is geen geldige Minecraft-spelernaam.");
             return;
         }
@@ -510,7 +619,10 @@ public class OoitNpcs extends JavaPlugin implements TabExecutor {
         npc.setLocation(loc);
         npc.name = "&e&l" + id.substring(0, 1).toUpperCase(Locale.ROOT) + id.substring(1);
         npc.text = "&7Klik op mij!";
-        if (item) {
+        if (animal) {
+            npc.kind = Npc.Kind.DIER;
+            npc.mob = animalType.getKey().getKey();
+        } else if (item) {
             npc.kind = Npc.Kind.ITEM;
             npc.item = hand.asOne();
         } else {
@@ -568,7 +680,17 @@ public class OoitNpcs extends JavaPlugin implements TabExecutor {
         List<String> options;
         if (args.length == 1) {
             options = Arrays.asList("create", "list", "info", "action", "name", "text", "skin", "move", "look",
-                    "item", "size", "spin", "tp", "remove", "respawn", "help");
+                    "item", "size", "spin", "dier", "variant", "baby", "sit", "tp", "remove", "respawn", "help");
+        } else if ((args.length == 4 && args[0].equalsIgnoreCase("create") && args[2].equalsIgnoreCase("dier"))
+                || (args.length == 3 && args[0].equalsIgnoreCase("dier"))) {
+            options = Animals.typeNames();
+        } else if (args.length == 3 && args[0].equalsIgnoreCase("variant")) {
+            Npc npc = npcs.get(args[1].toLowerCase(Locale.ROOT));
+            org.bukkit.entity.EntityType type = npc == null ? null : Animals.type(npc.mob);
+            options = new ArrayList<>(type == null ? Collections.emptyList() : Animals.variants(type));
+            options.add("geen");
+        } else if (args.length == 3 && (args[0].equalsIgnoreCase("baby") || args[0].equalsIgnoreCase("sit"))) {
+            options = Arrays.asList("aan", "uit");
         } else if (args.length == 2 && !args[0].equalsIgnoreCase("create") && !args[0].equalsIgnoreCase("list")) {
             options = new ArrayList<>(npcs.keySet());
         } else if (args.length == 3 && args[0].equalsIgnoreCase("action")) {
@@ -584,7 +706,10 @@ public class OoitNpcs extends JavaPlugin implements TabExecutor {
             options = Arrays.asList("1", "1.5", "2", "3");
         } else if (args.length == 3 && (args[0].equalsIgnoreCase("skin") || args[0].equalsIgnoreCase("create"))) {
             options = new ArrayList<>();
-            if (args[0].equalsIgnoreCase("create")) options.add("item");
+            if (args[0].equalsIgnoreCase("create")) {
+                options.add("item");
+                options.add("dier");
+            }
             for (Player p : Bukkit.getOnlinePlayers()) options.add(p.getName());
         } else {
             return Collections.emptyList();

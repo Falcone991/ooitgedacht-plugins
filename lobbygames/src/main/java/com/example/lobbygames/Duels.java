@@ -272,7 +272,22 @@ final class Duels implements TabExecutor, Listener {
         if (p.getWorld() != spawn1.getWorld()) return "Duels kan je alleen vanuit de lobby doen.";
         if (p.getGameMode() == GameMode.SPECTATOR) return "Als toeschouwer kan je niet duelleren.";
         if (inMatch(p.getUniqueId())) return "Je bent al in een duel.";
+        if (otherGame != null && otherGame.test(p.getUniqueId())) return "Je doet al mee aan Hot Potato.";
         return null;
+    }
+
+    /** Doet deze speler mee aan een duel (bezig, in de wachtrij of wachtend op de arena)? */
+    boolean isBusy(UUID uuid) {
+        if (inMatch(uuid) || queue.contains(uuid)) return true;
+        for (UUID[] pair : pairs) if (pair[0].equals(uuid) || pair[1].equals(uuid)) return true;
+        return false;
+    }
+
+    private java.util.function.Predicate<UUID> otherGame;
+
+    /** Andere lobbygame (Hot Potato): wie daar meedoet, kan niet duelleren. */
+    void setOtherGame(java.util.function.Predicate<UUID> otherGame) {
+        this.otherGame = otherGame;
     }
 
     /** Volgende paar de arena in, als die vrij is. */

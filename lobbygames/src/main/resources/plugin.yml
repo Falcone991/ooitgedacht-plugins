@@ -17,6 +17,11 @@ commands:
     usage: /duel <speler|accept|deny|wachtrij|opgeven|top>
     aliases: [duels]
     permission: lobbygames.play
+  hotpotato:
+    description: Hot Potato - tikkertje met een bom.
+    usage: /hotpotato <join|leave|top>
+    aliases: [hp]
+    permission: lobbygames.play
   launchpad:
     description: Drukplaten die je vooruit schieten (beheer).
     usage: /launchpad <set|remove|list>

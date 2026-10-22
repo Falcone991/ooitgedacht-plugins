@@ -18,7 +18,7 @@ import java.util.List;
 
 /**
  * Commando's die de Minecraft-server nodig hebben: /spelers, /deaths en de
- * beheer-commando's /msg, /kick, /ban, /unban. Slaapt de server, dan krijg je
+ * beheer-commando's /msg, /kick, /ban, /unban, /message (aan iedereen) en /restart. Slaapt de server, dan krijg je
  * daar netjes een melding van (en bij /deaths de laatst bekende ranglijst).
  */
 final class GameCommands {
@@ -58,6 +58,16 @@ final class GameCommands {
                         .setDefaultPermissions(staffOnly),
                 Commands.slash("unban", "Hef een ban van een speler op.")
                         .addOptions(new OptionData(OptionType.STRING, "speler", "Naam van de speler", true))
+                        .setDefaultPermissions(staffOnly),
+                Commands.slash("message", "Stuur een bericht naar iedereen in de game.")
+                        .addOptions(new OptionData(OptionType.STRING, "bericht", "Het bericht", true).setMaxLength(256))
+                        .setDefaultPermissions(staffOnly),
+                Commands.slash("restart", "Herstart de Minecraft-server (met aftellen in de game).")
+                        .addOptions(new OptionData(OptionType.STRING, "tijd", "Over hoe lang", false)
+                                        .addChoice("10 seconden", "10s").addChoice("30 seconden", "30s")
+                                        .addChoice("1 minuut", "1m").addChoice("5 minuten", "5m")
+                                        .addChoice("10 minuten", "10m"),
+                                reason)
                         .setDefaultPermissions(staffOnly)
         );
     }
@@ -71,6 +81,8 @@ final class GameCommands {
             case "kick":
             case "ban":
             case "unban":
+            case "message":
+            case "restart":
                 staffAction(event);
                 return true;
             default:
@@ -167,6 +179,8 @@ final class GameCommands {
         if (message != null) request.put("message", message);
         String reason = event.getOption("reden", OptionMapping::getAsString);
         if (reason != null) request.put("reason", reason);
+        String time = event.getOption("tijd", OptionMapping::getAsString);
+        if (time != null) request.put("time", time);
 
         bot.worker.execute(() -> {
             String text;

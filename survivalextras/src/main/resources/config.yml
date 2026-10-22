@@ -68,3 +68,62 @@ banned-items:
   only-crafting: false
   # Melding onderin beeld als iemand zo'n wapen probeert te gebruiken of op te pakken.
   message: "&cDit wapen is uitgeschakeld op deze server."
+
+# Loot drop-event: na een aftelling landt er ergens een kist met decoratie-hoofden en
+# handige spullen (geen echte boosts). Iedereen ziet de coördinaten, een balk bovenin
+# beeld en een lichtstraal in de lucht. Eenmalig event plannen (ook in Discord aangekondigd):
+# /lootdrop plan 20:00. Meteen: /lootdrop start [tijd], testen: /lootdrop hier [tijd].
+loot-drop:
+  enabled: true
+  # Standaard aftellen (seconden) voordat hij landt.
+  countdown-seconds: 300
+  # Hoe ver van het midden (deel van de wereldgrens, 0.7 = 70%) en niet dichter bij spawn dan:
+  border-fraction: 0.7
+  min-distance-from-spawn: 300
+  # Na zoveel minuten verdwijnt een kist die nog niet leeg is.
+  remove-after-minutes: 30
+  # Aantal spullen en decoratie-hoofden in de kist.
+  rolls: 7
+  heads: 3
+  # Ook hoofden van spelers die op dat moment online zijn?
+  player-heads: true
+  # Decoratie-hoofden (Minecraft-accounts met een skin van een voorwerp).
+  decoration-heads:
+    - MHF_Present1
+    - MHF_Present2
+    - MHF_Chest
+    - MHF_Cake
+    - MHF_Melon
+    - MHF_Pumpkin
+    - MHF_TNT
+    - MHF_Cactus
+    - MHF_OakLog
+    - MHF_Question
+    - MHF_Exclamation
+  # Handige spullen: item, aantal (of bereik) en hoe vaak (weight, hoger = vaker).
+  loot:
+    - {item: TORCH, amount: 16-32, weight: 20}
+    - {item: LANTERN, amount: 2-4, weight: 8}
+    - {item: BREAD, amount: 4-8, weight: 15}
+    - {item: COOKED_BEEF, amount: 3-6, weight: 12}
+    - {item: GOLDEN_CARROT, amount: 2-5, weight: 8}
+    - {item: COAL, amount: 8-16, weight: 12}
+    - {item: IRON_INGOT, amount: 2-5, weight: 10}
+    - {item: COPPER_INGOT, amount: 4-10, weight: 8}
+    - {item: ARROW, amount: 8-16, weight: 8}
+    - {item: BONE_MEAL, amount: 8-16, weight: 8}
+    - {item: OAK_SAPLING, amount: 2-4, weight: 5}
+    - {item: CHERRY_SAPLING, amount: 1-2, weight: 3}
+    - {item: EXPERIENCE_BOTTLE, amount: 3-6, weight: 6}
+    - {item: ENDER_PEARL, amount: 1-2, weight: 4}
+    - {item: BUCKET, weight: 4}
+    - {item: LEAD, amount: 1-2, weight: 4}
+    - {item: NAME_TAG, weight: 3}
+    - {item: SPYGLASS, weight: 3}
+    - {item: COMPASS, weight: 3}
+    - {item: CLOCK, weight: 2}
+    - {item: BUNDLE, weight: 3}
+    - {item: SADDLE, weight: 2}
+    - {item: PAINTING, amount: 1-3, weight: 4}
+    - {item: CANDLE, amount: 2-4, weight: 4}
+    - {item: FLOWER_POT, amount: 1-3, weight: 4}
