@@ -69,11 +69,24 @@ final class WorldRules implements Listener {
                 long full = world.getFullTime();
                 world.setFullTime(full - Math.floorMod(full, 24000L) + fixed);
             }
-            if (s.flag("geen-regen") && world.hasStorm()) {
-                world.setStorm(false);
-                world.setThundering(false);
+        }
+        // Geen regen: alleen voor de spelers in die wereld droog weer laten zien. Het echte weer
+        // NIET aanpassen: in Minecraft 26 delen extra werelden het weer met de overworld, dus dan
+        // zou het in survival ook nooit meer regenen.
+        for (org.bukkit.entity.Player p : Bukkit.getOnlinePlayers()) {
+            boolean dry = flagOff(p.getWorld(), "geen-regen");
+            if (dry && p.getPlayerWeather() != org.bukkit.WeatherType.CLEAR) {
+                p.setPlayerWeather(org.bukkit.WeatherType.CLEAR);
+            } else if (!dry && p.getPlayerWeather() != null) {
+                p.resetPlayerWeather();
             }
         }
+    }
+
+    /** Staat deze aan/uit-regel (die standaard uit is) aan voor deze wereld? */
+    private boolean flagOff(World world, String flag) {
+        WorldSettings s = settings(world);
+        return s != null && s.flag(flag);
     }
 
     // ---------- Gamemode ----------

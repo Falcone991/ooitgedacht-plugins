@@ -82,12 +82,14 @@ Klein scorebord + basic level-systeem:
   bukken = één blok. Via `player.breakBlock`, dus bijl slijt en bescherming telt mee.
   Instellingen onder `woodcutting:`. Plekhouder `{woodcutting_level}`.
 - **Bonusvangst bij vissen** (`fishing-loot`): kans op een extra item naast de gewone vangst,
-  groeiend met het vis-level (10% + 2%/level, max 45%), met een item extra per bonusvangst vanaf
-  level 10/20 (`extra-item-levels`) en kans op een dubbele gewone vangst (1%/level, max 15%).
+  groeiend met het vis-level (5% + 1%/level, max 25%), standaard één item per bonusvangst
+  (`extra-item-levels` leeg) en kans op een dubbele gewone vangst (0,5%/level, max 8%).
   Grote lijst (~50 items); hogere levels openen betere loot (schatkaart, betoverde boeken (gemaakt
   vanuit een gewoon boek, zoals een enchanttafel), diamanten, heel zeldzaam netherite scrap vanaf
   level 15, zeldzame items met melding voor iedereen). Vis-XP per vangst x
-  `xp-multiplier` (standaard 10). `/levels` toont kans, aantal items en dubbele-vangstkans.
+  `xp-multiplier` (standaard 5). `/levels` toont kans, aantal items en dubbele-vangstkans.
+  Items met `requires: nether`/`end` (kwarts, glowstone, blaze rod, Pigstep, netherite, shulker)
+  vallen pas als die dimensie open is volgens SurvivalTimeline (`data.yml`, elke minuut gelezen).
 
 ## stafftools
 Beheer-tools:

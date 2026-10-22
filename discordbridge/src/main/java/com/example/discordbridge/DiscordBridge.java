@@ -44,6 +44,7 @@ import java.io.File;
 import java.lang.management.ManagementFactory;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Base64;
 import java.util.Date;
 import java.util.HashSet;
@@ -272,6 +273,7 @@ public class DiscordBridge extends JavaPlugin implements Listener {
             case "ban": return rpcBan(str(req, "by"), str(req, "player"), reasonOrDefault(str(req, "reason")));
             case "unban": return rpcUnban(str(req, "by"), str(req, "player"));
             case "message": return rpcBroadcast(str(req, "by"), str(req, "message"));
+            case "stat": return rpcStat(str(req, "kind"), str(req, "player"), req.has("limit") ? req.get("limit").getAsInt() : 10);
             case "restart": return rpcRestart(str(req, "by"), str(req, "time"), str(req, "reason"));
             default:
                 return result(false, ":x: Onbekend verzoek '" + op + "'. Zijn de bot en de plugin allebei bijgewerkt?");
@@ -432,6 +434,111 @@ public class DiscordBridge extends JavaPlugin implements Listener {
 
         logDiscordAction(":speech_left: Bericht via Discord", by, target.getName(), "Bericht", message);
         return result(true, ":white_check_mark: Bericht verstuurd naar **" + md(target.getName()) + "**.");
+    }
+
+    // ---------- Ranglijsten: levels, kills, uren ----------
+
+    private static final String[] LEVEL_CATEGORIES = {"mining", "farming", "fishing", "exploring", "woodcutting"};
+    private static final String[] LEVEL_NAMES = {"Mijnen", "Boeren", "Vissen", "Verkennen", "Houthakken"};
+
+    /**
+     * kind = levels | kills | hours. Met player: alleen die speler, anders de top.
+     * Antwoord: {player:{name,value,text}} of {top:[{name,value,text}]}.
+     */
+    private JsonObject rpcStat(String kind, String only, int limit) {
+        JsonObject r = new JsonObject();
+        if (!Arrays.asList("levels", "kills", "hours").contains(kind)) {
+            r.addProperty("error", "Onbekende ranglijst '" + kind + "'.");
+            return r;
+        }
+        org.bukkit.configuration.file.YamlConfiguration levels = kind.equals("levels") ? loadLevels() : null;
+        int xpPerLevel = kind.equals("levels") ? levelXpPerLevel() : 100;
+
+        if (!only.isEmpty()) {
+            OfflinePlayer player = Bukkit.getOfflinePlayerIfCached(only);
+            if (player == null) {
+                r.addProperty("error", "**" + md(only) + "** is nog nooit op de server geweest.");
+                return r;
+            }
+            JsonObject e = statEntry(kind, player, levels, xpPerLevel, true);
+            if (e == null) {
+                e = new JsonObject();
+                e.addProperty("name", player.getName() != null ? player.getName() : only);
+                e.addProperty("value", 0);
+                e.addProperty("text", "nog niets");
+            }
+            r.add("player", e);
+            return r;
+        }
+
+        List<JsonObject> list = new ArrayList<>();
+        for (OfflinePlayer player : Bukkit.getOfflinePlayers()) {
+            if (player.getName() == null) continue;
+            JsonObject e = statEntry(kind, player, levels, xpPerLevel, false);
+            if (e != null && e.get("value").getAsLong() > 0) list.add(e);
+        }
+        list.sort((a, b) -> Long.compare(b.get("value").getAsLong(), a.get("value").getAsLong()));
+        JsonArray top = new JsonArray();
+        for (int i = 0; i < Math.min(Math.max(1, limit), list.size()); i++) top.add(list.get(i));
+        r.add("top", top);
+        return r;
+    }
+
+    /** Eén regel voor de ranglijst, of null als er voor deze speler niets bekend is. */
+    private JsonObject statEntry(String kind, OfflinePlayer player, org.bukkit.configuration.file.YamlConfiguration levels,
+                                 int xpPerLevel, boolean detailed) {
+        JsonObject e = new JsonObject();
+        e.addProperty("name", player.getName());
+        try {
+            switch (kind) {
+                case "kills": {
+                    int players = stat(player, Statistic.PLAYER_KILLS);
+                    int mobs = stat(player, Statistic.MOB_KILLS);
+                    e.addProperty("value", players * 100000L + mobs); // eerst spelers, dan mobs
+                    e.addProperty("text", players + (players == 1 ? " speler" : " spelers") + " · " + mobs + " mobs");
+                    return e;
+                }
+                case "hours": {
+                    long minutes = stat(player, Statistic.PLAY_ONE_MINUTE) / 20L / 60L; // in ticks opgeslagen
+                    e.addProperty("value", minutes);
+                    e.addProperty("text", (minutes / 60) + " uur " + (minutes % 60) + " min");
+                    return e;
+                }
+                default: {
+                    if (levels == null) return null;
+                    String base = "players." + player.getUniqueId() + ".";
+                    int total = 0;
+                    StringBuilder sb = new StringBuilder();
+                    for (int i = 0; i < LEVEL_CATEGORIES.length; i++) {
+                        int lvl = levels.getInt(base + LEVEL_CATEGORIES[i] + "-xp", 0) / Math.max(1, xpPerLevel);
+                        total += lvl;
+                        if (detailed) sb.append("\n").append(LEVEL_NAMES[i]).append(": **").append(lvl).append("**");
+                    }
+                    e.addProperty("value", total);
+                    e.addProperty("text", "level " + total + sb);
+                    return e;
+                }
+            }
+        } catch (Exception ignored) {
+            return null; // geen statistieken-bestand voor deze speler
+        }
+    }
+
+    /** Online = de echte, actuele stand; offline = wat er op schijf staat. */
+    private static int stat(OfflinePlayer player, Statistic statistic) {
+        Player online = player.getPlayer();
+        return online != null ? online.getStatistic(statistic) : player.getStatistic(statistic);
+    }
+
+    private org.bukkit.configuration.file.YamlConfiguration loadLevels() {
+        java.io.File file = new java.io.File(getDataFolder().getParentFile(), "PlayerStats/data.yml");
+        return file.isFile() ? org.bukkit.configuration.file.YamlConfiguration.loadConfiguration(file) : null;
+    }
+
+    private int levelXpPerLevel() {
+        java.io.File file = new java.io.File(getDataFolder().getParentFile(), "PlayerStats/config.yml");
+        if (!file.isFile()) return 100;
+        return Math.max(1, org.bukkit.configuration.file.YamlConfiguration.loadConfiguration(file).getInt("leveling.xp-per-level", 100));
     }
 
     /** Bericht vanuit Discord voor iedereen in de game. */

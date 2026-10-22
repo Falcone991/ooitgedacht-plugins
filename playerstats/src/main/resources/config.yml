@@ -67,76 +67,76 @@ leveling:
 #   enchant-levels: (optioneel) willekeurig betoveren alsof op een enchanttafel met zoveel levels
 #   announce: (optioneel) true = iedereen ziet in de chat dat je dit opviste
 #   name: (optioneel) naam in de melding
+#   requires: (optioneel) nether of end = pas als die dimensie open is (SurvivalTimeline)
 fishing-loot:
   enabled: true
-  # Vis-XP per vangst wordt hiermee vermenigvuldigd (10 = 10 vangsten per level i.p.v. 100).
-  xp-multiplier: 10
-  # Kans op een bonusvangst: 10% + 2% per vis-level, maximaal 45%.
-  base-chance: 10
-  chance-per-level: 2
-  max-chance: 45
-  # Vanaf deze vis-levels krijg je per bonusvangst één item extra (level 10 = 2 items, 20 = 3).
-  extra-item-levels: [10, 20]
-  # Kans dat je gewone vangst dubbel is: 1% per vis-level, maximaal 15%.
-  double-catch-per-level: 1
-  double-catch-max: 15
+  # Vis-XP per vangst wordt hiermee vermenigvuldigd (5 = 20 vangsten per level i.p.v. 100).
+  xp-multiplier: 5
+  # Kans op een bonusvangst: 5% + 1% per vis-level, maximaal 25%.
+  base-chance: 5
+  chance-per-level: 1
+  max-chance: 25
+  # Vanaf deze vis-levels krijg je per bonusvangst één item extra (leeg = altijd 1 item).
+  extra-item-levels: []
+  # Kans dat je gewone vangst dubbel is: 0.5% per vis-level, maximaal 8%.
+  double-catch-per-level: 0.5
+  double-catch-max: 8
   # Bonus-items en dubbele vangst die niet opgepakt worden, verdwijnen na zoveel seconden
   # (normaal in Minecraft 300 = 5 minuten).
   despawn-seconds: 60
   loot:
     # ---- Level 0+: handig spul ----
-    - {item: SLIME_BALL, level: 0, weight: 25, amount: 2-5}
-    - {item: IRON_INGOT, level: 0, weight: 20, amount: 2-5}
-    - {item: GOLD_INGOT, level: 0, weight: 15, amount: 1-4}
-    - {item: COPPER_INGOT, level: 0, weight: 15, amount: 4-10}
-    - {item: COAL, level: 0, weight: 15, amount: 4-12}
-    - {item: STRING, level: 0, weight: 12, amount: 3-8}
-    - {item: LEATHER, level: 0, weight: 12, amount: 2-6}
-    - {item: INK_SAC, level: 0, weight: 10, amount: 2-6}
-    - {item: KELP, level: 0, weight: 10, amount: 4-12}
-    - {item: SEA_PICKLE, level: 0, weight: 8, amount: 1-4}
-    - {item: COOKED_COD, level: 0, weight: 12, amount: 2-6}
-    - {item: COOKED_SALMON, level: 0, weight: 12, amount: 2-6}
-    - {item: BONE, level: 0, weight: 10, amount: 2-6}
+    - {item: SLIME_BALL, level: 0, weight: 25, amount: 1-3}
+    - {item: IRON_INGOT, level: 0, weight: 20, amount: 1-3}
+    - {item: GOLD_INGOT, level: 0, weight: 15, amount: 1-2}
+    - {item: COPPER_INGOT, level: 0, weight: 15, amount: 2-5}
+    - {item: COAL, level: 0, weight: 15, amount: 1-3}
+    - {item: STRING, level: 0, weight: 12, amount: 2-4}
+    - {item: LEATHER, level: 0, weight: 12, amount: 1-3}
+    - {item: INK_SAC, level: 0, weight: 10, amount: 1-3}
+    - {item: KELP, level: 0, weight: 10, amount: 1-3}
+    - {item: SEA_PICKLE, level: 0, weight: 8, amount: 1-2}
+    - {item: COOKED_COD, level: 0, weight: 12, amount: 1-3}
+    - {item: COOKED_SALMON, level: 0, weight: 12, amount: 1-3}
+    - {item: BONE, level: 0, weight: 10, amount: 1-3}
     - {item: NAME_TAG, level: 0, weight: 6}
     - {item: LEAD, level: 0, weight: 6, amount: 1-2}
     # ---- Level 2+ ----
-    - {item: LAPIS_LAZULI, level: 2, weight: 15, amount: 4-12}
-    - {item: REDSTONE, level: 2, weight: 12, amount: 4-12}
-    - {item: EXPERIENCE_BOTTLE, level: 2, weight: 15, amount: 3-8}
-    - {item: PRISMARINE_SHARD, level: 2, weight: 10, amount: 3-8}
-    - {item: PRISMARINE_CRYSTALS, level: 2, weight: 8, amount: 2-6}
-    - {item: GLOW_INK_SAC, level: 2, weight: 8, amount: 1-4}
-    - {item: GOLDEN_CARROT, level: 2, weight: 10, amount: 2-6}
+    - {item: LAPIS_LAZULI, level: 2, weight: 15, amount: 1-3}
+    - {item: REDSTONE, level: 2, weight: 12, amount: 1-3}
+    - {item: EXPERIENCE_BOTTLE, level: 2, weight: 10, amount: 1-3}
+    - {item: PRISMARINE_SHARD, level: 2, weight: 10, amount: 2-4}
+    - {item: PRISMARINE_CRYSTALS, level: 2, weight: 8, amount: 1-3}
+    - {item: GLOW_INK_SAC, level: 2, weight: 8, amount: 1-2}
+    - {item: GOLDEN_CARROT, level: 2, weight: 10, amount: 1-3}
     - {item: SADDLE, level: 2, weight: 5}
     - {item: NAUTILUS_SHELL, level: 2, weight: 8, amount: 1-2}
-    - {item: BOOK, level: 2, weight: 8, amount: 2-5}
+    - {item: BOOK, level: 2, weight: 8, amount: 1-3}
     # ---- Level 4+ ----
-    - {item: TREASURE_MAP, level: 4, weight: 7}
+    - {item: TREASURE_MAP, level: 4, weight: 4}
     - {item: ENCHANTED_BOOK, level: 4, weight: 3, enchant-levels: 10}
-    - {item: EMERALD, level: 4, weight: 12, amount: 2-6}
-    - {item: AMETHYST_SHARD, level: 4, weight: 8, amount: 2-6}
-    - {item: QUARTZ, level: 4, weight: 8, amount: 4-10}
-    - {item: GLOWSTONE_DUST, level: 4, weight: 8, amount: 3-8}
-    - {item: ENDER_PEARL, level: 4, weight: 8, amount: 1-3}
+    - {item: EMERALD, level: 4, weight: 8, amount: 1-2}
+    - {item: AMETHYST_SHARD, level: 4, weight: 8, amount: 1-3}
+    - {item: QUARTZ, level: 4, weight: 8, amount: 2-5, requires: nether}
+    - {item: GLOWSTONE_DUST, level: 4, weight: 8, amount: 2-4, requires: nether}
+    - {item: ENDER_PEARL, level: 4, weight: 4, amount: 1}
     - {item: TURTLE_SCUTE, level: 4, weight: 5, amount: 1-2}
     - {item: GOLDEN_APPLE, level: 6, weight: 1}
     # ---- Level 6+ ----
-    - {item: DIAMOND, level: 6, weight: 4}
+    - {item: DIAMOND, level: 8, weight: 2}
     - {item: ENCHANTED_BOOK, level: 8, weight: 2, enchant-levels: 20}
-    - {item: BLAZE_ROD, level: 6, weight: 5, amount: 1-3}
-    - {item: HEART_OF_THE_SEA, level: 6, weight: 2, announce: true}
+    - {item: BLAZE_ROD, level: 6, weight: 3, amount: 1, requires: nether}
+    - {item: HEART_OF_THE_SEA, level: 8, weight: 1, announce: true}
     - {item: MUSIC_DISC_CAT, level: 6, weight: 1, announce: true, name: "Muziekplaat"}
-    - {item: MUSIC_DISC_PIGSTEP, level: 6, weight: 1, announce: true, name: "Muziekplaat Pigstep"}
+    - {item: MUSIC_DISC_PIGSTEP, level: 6, weight: 1, announce: true, name: "Muziekplaat Pigstep", requires: nether}
     # ---- Level 8+ ----
-    - {item: DIAMOND, level: 8, weight: 3, amount: 1-2}
-    - {item: TRIDENT, level: 8, weight: 2, announce: true}
-    - {item: SHULKER_SHELL, level: 8, weight: 2, announce: true, amount: 1-2}
+    - {item: DIAMOND, level: 12, weight: 1, amount: 1-2}
+    - {item: TRIDENT, level: 12, weight: 1, announce: true}
+    - {item: SHULKER_SHELL, level: 12, weight: 1, announce: true, requires: end}
     - {item: SNIFFER_EGG, level: 8, weight: 1, announce: true, name: "Sniffer-ei"}
     # ---- Level 12+ ----
-    - {item: NETHERITE_SCRAP, level: 15, weight: 1, announce: true}
+    - {item: NETHERITE_SCRAP, level: 15, weight: 1, announce: true, requires: nether}
     - {item: WAYFINDER_ARMOR_TRIM_SMITHING_TEMPLATE, level: 12, weight: 1, announce: true, name: "Harnas-versiering"}
-    - {item: DIAMOND, level: 12, weight: 3, amount: 2-3}
 
 
 # Houthakken: met een bijl hak je op hogere levels meerdere blokken van dezelfde boom

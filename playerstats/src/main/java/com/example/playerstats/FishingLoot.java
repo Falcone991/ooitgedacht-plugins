@@ -37,6 +37,36 @@ final class FishingLoot {
         int enchantLevels;
         boolean announce;
         String name;
+        String requires; // "nether" of "end": pas als die open is (SurvivalTimeline); null = altijd
+    }
+
+    // Wat is er al open volgens SurvivalTimeline (plugins/SurvivalTimeline/data.yml)? Elke minuut opnieuw lezen.
+    private final java.io.File timelineData;
+    private long timelineReadAt;
+    private boolean netherOpen = true;
+    private boolean endOpen = true;
+
+    private void refreshTimeline() {
+        long now = System.currentTimeMillis();
+        if (now - timelineReadAt < 60_000L) return;
+        timelineReadAt = now;
+        if (timelineData == null || !timelineData.isFile()) {
+            netherOpen = true; // geen tijdlijn = alles open
+            endOpen = true;
+            return;
+        }
+        org.bukkit.configuration.file.YamlConfiguration yaml =
+                org.bukkit.configuration.file.YamlConfiguration.loadConfiguration(timelineData);
+        boolean seasonOver = yaml.getBoolean("season-ended", false);
+        netherOpen = seasonOver || yaml.getBoolean("nether-unlocked", false);
+        endOpen = seasonOver || yaml.getBoolean("end-unlocked", false);
+    }
+
+    private boolean available(Entry e) {
+        if (e.requires == null) return true;
+        if (e.requires.equals("nether")) return netherOpen;
+        if (e.requires.equals("end")) return endOpen;
+        return true;
     }
 
     private final Logger logger;
@@ -52,8 +82,9 @@ final class FishingLoot {
     private final List<Entry> entries = new ArrayList<>();
     private final Random random = new Random();
 
-    FishingLoot(ConfigurationSection c, Logger logger) {
+    FishingLoot(ConfigurationSection c, Logger logger, java.io.File pluginsFolder) {
         this.logger = logger;
+        this.timelineData = pluginsFolder == null ? null : new java.io.File(pluginsFolder, "SurvivalTimeline/data.yml");
         enabled = c != null && c.getBoolean("enabled", true);
         baseChance = c == null ? 0 : c.getDouble("base-chance", 5);
         chancePerLevel = c == null ? 0 : c.getDouble("chance-per-level", 2);
@@ -76,6 +107,7 @@ final class FishingLoot {
             e.enchantLevels = number(raw.get("enchant-levels"), 0);
             e.announce = Boolean.parseBoolean(String.valueOf(raw.get("announce")));
             e.name = raw.containsKey("name") ? String.valueOf(raw.get("name")) : null;
+            e.requires = raw.containsKey("requires") ? String.valueOf(raw.get("requires")).toLowerCase(Locale.ROOT) : null;
             if (!e.material.equals("TREASURE_MAP") && Material.matchMaterial(e.material) == null) {
                 logger.warning("fishing-loot: onbekend item '" + e.material + "', overgeslagen.");
                 continue;
@@ -131,10 +163,11 @@ final class FishingLoot {
     }
 
     private void giveBonus(Player player, Item caught, int level) {
+        refreshTimeline();
         List<Entry> options = new ArrayList<>();
         int total = 0;
         for (Entry e : entries) {
-            if (e.minLevel <= level) {
+            if (e.minLevel <= level && available(e)) {
                 options.add(e);
                 total += e.weight;
             }

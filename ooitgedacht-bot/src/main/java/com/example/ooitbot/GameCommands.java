@@ -46,6 +46,12 @@ final class GameCommands {
                 Commands.slash("spelers", "Bekijk wie er nu online is op de Minecraft-server."),
                 Commands.slash("deaths", "Wie is er het vaakst doodgegaan op de server?")
                         .addOption(OptionType.STRING, "speler", "Bekijk de doden van één speler", false, true),
+                Commands.slash("levels", "Wie heeft het hoogste level (mijnen, boeren, vissen, verkennen, houthakken)?")
+                        .addOption(OptionType.STRING, "speler", "Bekijk de levels van één speler", false, true),
+                Commands.slash("kills", "Wie heeft de meeste kills (spelers en mobs)?")
+                        .addOption(OptionType.STRING, "speler", "Bekijk de kills van één speler", false, true),
+                Commands.slash("hours", "Wie heeft het langst gespeeld?")
+                        .addOption(OptionType.STRING, "speler", "Bekijk de speeltijd van één speler", false, true),
                 Commands.slash("msg", "Stuur een speler in-game een bericht als beheer.")
                         .addOptions(playerOnline,
                                 new OptionData(OptionType.STRING, "bericht", "Het bericht", true).setMaxLength(256))
@@ -77,6 +83,9 @@ final class GameCommands {
         switch (event.getName()) {
             case "spelers": spelers(event); return true;
             case "deaths": deaths(event); return true;
+            case "levels": ranking(event, "levels", ":chart_with_upwards_trend: Hoogste levels", ":chart_with_upwards_trend: Levels van ", 0x2ECC71); return true;
+            case "kills": ranking(event, "kills", ":crossed_swords: Meeste kills", ":crossed_swords: Kills van ", 0xE74C3C); return true;
+            case "hours": ranking(event, "hours", ":hourglass: Langst gespeeld", ":hourglass: Speeltijd van ", 0x3498DB); return true;
             case "msg":
             case "kick":
             case "ban":
@@ -141,6 +150,57 @@ final class GameCommands {
                 reply(event, ":skull: Doden", ":x: De server reageert niet: " + e.getMessage());
             }
         });
+    }
+
+    /** /levels, /kills, /hours: ranglijst of één speler; slaapt de server, dan de laatst bekende lijst. */
+    private void ranking(SlashCommandInteractionEvent event, String kind, String topTitle, String playerTitle, int color) {
+        String only = event.getOption("speler", OptionMapping::getAsString);
+        event.deferReply().queue();
+        bot.worker.execute(() -> {
+            if (!bot.link.isOnline()) {
+                JsonNode cached = bot.data.node("last-" + kind);
+                String text = only == null && cached != null ? formatRanking(cached) + "\n\n" + SLEEPING : SLEEPING;
+                event.getHook().editOriginalEmbeds(bot.embed(color, topTitle + (cached != null && only == null ? " (laatst bekend)" : ""),
+                        text).build()).queue();
+                return;
+            }
+            try {
+                ObjectNode request = bot.link.request("stat").put("kind", kind).put("limit", topSize);
+                if (only != null) request.put("player", only);
+                JsonNode response = bot.link.rpc(request);
+                String title;
+                String text;
+                if (response.has("error")) {
+                    title = topTitle;
+                    text = response.path("error").asText();
+                } else if (response.has("player")) {
+                    JsonNode p = response.path("player");
+                    title = playerTitle + p.path("name").asText();
+                    text = "**" + MarkdownSanitizer.escape(p.path("name").asText()) + "**: " + p.path("text").asText();
+                } else {
+                    JsonNode top = response.path("top");
+                    bot.data.putNode("last-" + kind, top);
+                    bot.data.save();
+                    title = topTitle;
+                    text = formatRanking(top);
+                }
+                event.getHook().editOriginalEmbeds(bot.embed(color, title, text).build()).queue();
+            } catch (IOException e) {
+                event.getHook().editOriginalEmbeds(bot.embed(color, topTitle, ":x: De server reageert niet: " + e.getMessage()).build()).queue();
+            }
+        });
+    }
+
+    private String formatRanking(JsonNode top) {
+        if (top.size() == 0) return "Nog niemand in deze lijst.";
+        StringBuilder sb = new StringBuilder();
+        for (int i = 0; i < Math.min(topSize, top.size()); i++) {
+            JsonNode entry = top.get(i);
+            sb.append(i < MEDALS.length ? MEDALS[i] : "`" + (i + 1) + ".`").append(" **")
+                    .append(MarkdownSanitizer.escape(entry.path("name").asText())).append("** — ")
+                    .append(entry.path("text").asText()).append("\n");
+        }
+        return sb.toString();
     }
 
     private String formatTop(JsonNode top) {

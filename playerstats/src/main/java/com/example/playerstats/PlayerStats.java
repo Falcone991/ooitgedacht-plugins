@@ -91,7 +91,7 @@ public class PlayerStats extends JavaPlugin implements CommandExecutor, Listener
         saveDefaultConfig();
         loadSettings();
         loadData();
-        fishingLoot = new FishingLoot(getConfig().getConfigurationSection("fishing-loot"), getLogger());
+        fishingLoot = new FishingLoot(getConfig().getConfigurationSection("fishing-loot"), getLogger(), getDataFolder().getParentFile());
         woodcutting = new Woodcutting(this, getConfig().getConfigurationSection("woodcutting"));
         Bukkit.getPluginManager().registerEvents(woodcutting, this);
 
