@@ -121,3 +121,31 @@ welcome-message:
     - "&7"
     - "&fVeel plezier en succes!"
     - "&6&l=========================================="
+
+# Tekst in de serverlijst van Minecraft. Bovenaan een vaste regel, daaronder elke keer een
+# willekeurig zinnetje met namen van echte spelers: <speler> en <speler2> (twee verschillende).
+# Opmaak met MiniMessage: <red>, <gold>, <#ff8a00> (eigen kleur), <bold>, <italic> en
+# kleurverlopen zoals <gradient:#ff8a00:#ffd000>tekst</gradient>. Houd een regel kort (± 45 tekens).
+# Let op: slaapt de server (AMP), dan zie je de tekst van AMP zelf.
+motd:
+  enabled: true
+  first-line: "<gradient:#ff8a00:#ffd000><bold>OoitGedacht SMP</bold></gradient> <dark_gray>»</dark_gray> <gray>Survival tot het einde</gray>"
+  lines:
+    - "<yellow><speler></yellow> <white>is een rare snuiter!</white>"
+    - "<red><speler></red> <white>is een rare trol</white> <gray>:)</gray>"
+    - "<green><speler></green> <white>is</white> <gradient:#00ff87:#60efff>geweldig!</gradient>"
+    - "<light_purple><speler></light_purple> <white>en</white> <light_purple><speler2></light_purple> <white>zijn verliefd</white> <red>❤</red>"
+    - "<aqua><speler></aqua> <white>zoekt nog steeds diamanten...</white>"
+    - "<gold><speler></gold> <white>heeft weer een creeper geknuffeld</white> <green>✦</green>"
+    - "<yellow><speler></yellow> <white>viste 3 uur en ving een</white> <gray>laars</gray>"
+    - "<red><speler></red> <white>verstopt zich voor</white> <red><speler2></red>"
+    - "<blue><speler></blue> <white>en</white> <blue><speler2></blue> <white>bouwen samen een kasteel</white>"
+    - "<green><speler></green> <white>danst met een kip</white> <yellow>♪</yellow>"
+    - "<gold><speler></gold> <white>is de baas van de lobby</white>"
+    - "<aqua><speler></aqua> <white>is net in lava gevallen</white> <gray>(oeps)</gray>"
+    - "<light_purple><speler></light_purple> <white>heeft een taart voor</white> <light_purple><speler2></light_purple> <white>gebakken</white>"
+    - "<yellow><speler></yellow> <white>is bang voor kippen</white>"
+    - "<red><speler></red> <white>heeft</white> <red><speler2></red> <white>in de brig gezet!</white>"
+  # Als er nog bijna geen spelers zijn geweest.
+  lines-without-players:
+    - "<yellow>Kom je ook spelen?</yellow> <white>Iedereen is welkom!</white>"

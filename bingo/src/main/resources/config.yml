@@ -1,0 +1,100 @@
+# OoitBingo
+#
+# Beheer start een bingo met /bingo start. Spelers doen mee met /bingo join en krijgen een
+# kaart (map) met 9 blokken (3x3). Heb je een blok in je inventory, dan is hij afgevinkt (ook als
+# je hem daarna weer gebruikt). Rechtsklik met de kaart = overzicht met de echte blokken.
+# Wie als eerste een rij (of de hele kaart, zie win) vol heeft, wint.
+
+# full = de hele kaart vol (alle 9); line = een rij, kolom of diagonaal van 3 vol.
+win: full
+
+# Beloning voor de winnaar: zoveel XP-levels.
+reward-levels: 30
+
+# Hoeveel blokken van elke moeilijkheid op de kaart (samen 9).
+card:
+  easy: 4
+  medium: 3
+  hard: 2
+
+# Ook in Discord aankondigen (via de DiscordBridge-plugin, als die er is).
+discord: true
+
+# Blokken per moeilijkheid. Zet ":nether" of ":end" erachter voor blokken die pas mogen
+# als die dimensie open is (SurvivalTimeline).
+blocks:
+  easy:
+    - OAK_LOG
+    - BIRCH_LOG
+    - SPRUCE_LOG
+    - COBBLESTONE
+    - DIRT
+    - SAND
+    - GRAVEL
+    - OAK_PLANKS
+    - CRAFTING_TABLE
+    - FURNACE
+    - CHEST
+    - LADDER
+    - OAK_FENCE
+    - STONE
+    - ANDESITE
+    - DIORITE
+    - GRANITE
+    - COBBLED_DEEPSLATE
+    - TUFF
+    - SANDSTONE
+    - CACTUS
+    - PUMPKIN
+    - MELON
+    - BARREL
+    - COMPOSTER
+    - WHITE_WOOL
+    - TORCH
+    - NETHERRACK:nether
+  medium:
+    - GLASS
+    - BRICKS
+    - BOOKSHELF
+    - HAY_BLOCK
+    - MOSSY_COBBLESTONE
+    - MUD_BRICKS
+    - TERRACOTTA
+    - MOSS_BLOCK
+    - CALCITE
+    - COPPER_BLOCK
+    - COAL_BLOCK
+    - REDSTONE_BLOCK
+    - LANTERN
+    - SCAFFOLDING
+    - SMOKER
+    - BLAST_FURNACE
+    - TNT
+    - SNOW_BLOCK
+    - POINTED_DRIPSTONE
+    - CLAY
+    - ORANGE_WOOL
+    - BLUE_WOOL
+    - SOUL_SAND:nether
+    - GLOWSTONE:nether
+    - QUARTZ_BLOCK:nether
+    - NETHER_BRICKS:nether
+    - CRIMSON_STEM:nether
+    - BASALT:nether
+  hard:
+    - IRON_BLOCK
+    - GOLD_BLOCK
+    - LAPIS_BLOCK
+    - OBSIDIAN
+    - COBWEB
+    - AMETHYST_BLOCK
+    - PRISMARINE
+    - SEA_LANTERN
+    - ANVIL
+    - JUKEBOX
+    - HONEYCOMB_BLOCK
+    - ICE
+    - EMERALD_BLOCK
+    - MAGMA_BLOCK
+    - END_STONE:end
+    - PURPUR_BLOCK:end

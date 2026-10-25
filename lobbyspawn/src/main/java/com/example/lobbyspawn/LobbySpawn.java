@@ -115,6 +115,9 @@ public class LobbySpawn extends JavaPlugin implements CommandExecutor, Listener 
                         : java.util.Collections.emptyList());
 
         Bukkit.getPluginManager().registerEvents(this, this);
+        if (getConfig().getBoolean("motd.enabled", true) && getConfig().getConfigurationSection("motd") != null) {
+            Bukkit.getPluginManager().registerEvents(new Motd(getConfig().getConfigurationSection("motd")), this);
+        }
         opening = new SurvivalOpening(this);
         Bukkit.getPluginManager().registerEvents(opening, this);
 

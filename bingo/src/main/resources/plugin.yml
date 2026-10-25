@@ -1,0 +1,20 @@
+name: OoitBingo
+version: '1.0.0'
+main: com.example.ooitbingo.OoitBingo
+api-version: '1.21'
+author: Claude
+description: Bingo in survival - verzamel de blokken op je kaart, eerste met een rij wint XP.
+
+commands:
+  bingo:
+    description: Bingo - verzamel de blokken op je kaart.
+    usage: /bingo <join|kaart|leave|top>
+    permission: bingo.play
+
+permissions:
+  bingo.play:
+    description: Mag meedoen aan bingo.
+    default: true
+  bingo.admin:
+    description: Mag bingo starten en stoppen.
+    default: op

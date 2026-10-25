@@ -142,7 +142,10 @@ fishing-loot:
 # Houthakken: met een bijl hak je op hogere levels meerdere blokken van dezelfde boom
 # tegelijk (alleen echte bomen, niet je houten huis). Bukken = gewoon één blok.
 woodcutting:
-  boost-1-level: 15
-  boost-1-blocks: 8
-  boost-2-level: 30
-  boost-2-blocks: 100
+  # Elke zoveel levels één blok extra per hak (10 = level 10: 2 blokken, level 20: 3, ...).
+  levels-per-extra-block: 10
+  # Nooit meer dan dit aantal blokken per hak (tot de grote beloning hieronder).
+  max-blocks: 10
+  # De grote beloning: vanaf dit level hak je de hele boom in één keer (tot zoveel blokken).
+  big-boost-level: 100
+  big-boost-blocks: 100

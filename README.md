@@ -42,6 +42,9 @@ Fasegewijze survival-tijdlijn, real-life weken geteld vanaf de eerste start:
 
 ## lobbyspawn
 Lobby/hub-systeem + spawn-bescherming:
+- **Serverlijst-tekst** (`motd:`): vaste eerste regel met kleurverloop, tweede regel elke ping een
+  willekeurig grappig zinnetje met namen van echte spelers (`<speler>`, `<speler2>`), in
+  MiniMessage-opmaak. Slaapt de server (AMP), dan toont AMP zijn eigen tekst.
 - `/lobby`, `/setlobby` — teleport naar/instellen van de lobby, met warmup (annuleert bij
   bewegen/schade) en cooldown. Admin-bypass via `lobbyspawn.bypassdelay`.
 - `/spawn` — zelfde systeem, maar naar het spawnpunt van de **survival**-wereld.
@@ -77,9 +80,10 @@ Klein scorebord + basic level-systeem:
   `xp-per-level` punten = 1 level, met titel-animatie + geluid + deeltjes + gratis
   Minecraft-XP bij een level-up.
 - **Houthakken** (5e categorie): `woodcutting-per-log` (3) XP per houtblok van een echte boom
-  (natuurlijke bladeren in de buurt; zelf neergezet hout telt niet). Met een bijl hak je vanaf
-  level 15 tot 8 blokken van dezelfde boom tegelijk, vanaf level 30 de hele boom (max 100);
-  bukken = één blok. Via `player.breakBlock`, dus bijl slijt en bescherming telt mee.
+  (natuurlijke bladeren in de buurt; zelf neergezet hout telt niet). Met een bijl hak je elke
+  10 levels één blok van dezelfde boom extra per hak (level 10: 2, level 20: 3, ..., max 10;
+  `levels-per-extra-block`, `max-blocks`), en vanaf level 100 de hele boom (`big-boost-level`,
+  `big-boost-blocks`, max 100); bukken = één blok. Via `player.breakBlock`, dus bijl slijt en bescherming telt mee.
   Instellingen onder `woodcutting:`. Plekhouder `{woodcutting_level}`.
 - **Bonusvangst bij vissen** (`fishing-loot`): kans op een extra item naast de gewone vangst,
   groeiend met het vis-level (5% + 1%/level, max 25%), standaard één item per bonusvangst
@@ -227,6 +231,16 @@ Spelletjes in de lobby:
   (standaard 2 en 1; richting = waar je kijkt, of met `vrij` de kijkrichting van de speler). Alleen
   aangewezen platen lanceren; daarna even geen valschade. `/launchpad remove` (waar je op staat),
   `/launchpad list`. Opslag: `launchpads.yml`.
+
+## bingo (OoitBingo)
+Bingo in survival. Beheer start met `/bingo start [full|line]` (standaard `full` = hele kaart),
+`/bingo stop`. Spelers: `/bingo join` (bingokaart = map in je hand), `/bingo kaart`, `/bingo top`,
+`/bingo leave`. Kaart van 3x3 blokken (4 makkelijk, 3 middel, 2 moeilijk uit `blocks:`; met
+`:nether`/`:end` pas als die dimensie open is volgens SurvivalTimeline). De map toont per speler
+vakjes in de kleur van het blok met een groen vinkje als je hem hebt; rechtsklik = overzicht met de
+echte blokken. Een blok telt zodra het in je inventory zit (elke 2 s gecontroleerd). Winnaar krijgt
+`reward-levels` (30) XP-levels, melding, vuurwerk en (via DiscordBridge) een Discord-aankondiging.
+Opslag in `bingo.yml` (overleeft een herstart); oude kaarten worden opgeruimd.
 
 ## funitems
 Leuke rechtermuisklik-spelletjes met nuggets (geen commando's):

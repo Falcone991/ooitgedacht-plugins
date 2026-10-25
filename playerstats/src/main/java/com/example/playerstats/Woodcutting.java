@@ -32,31 +32,33 @@ final class Woodcutting implements Listener {
     private static final int SEARCH_LIMIT = 400; // nooit meer blokken bekijken dan dit (tegen lag)
 
     private final PlayerStats plugin;
-    private final int level1;
-    private final int blocks1;
-    private final int level2;
-    private final int blocks2;
+    private final int levelsPerBlock;
+    private final int maxBlocks;
     private final Set<UUID> felling = new HashSet<>();
 
     Woodcutting(PlayerStats plugin, ConfigurationSection c) {
         this.plugin = plugin;
-        level1 = c == null ? 15 : c.getInt("boost-1-level", 15);
-        blocks1 = c == null ? 8 : c.getInt("boost-1-blocks", 8);
-        level2 = c == null ? 30 : c.getInt("boost-2-level", 30);
-        blocks2 = c == null ? 100 : c.getInt("boost-2-blocks", 100);
+        levelsPerBlock = c == null ? 10 : Math.max(1, c.getInt("levels-per-extra-block", 10));
+        maxBlocks = c == null ? 10 : Math.max(1, c.getInt("max-blocks", 10));
+        bigLevel = c == null ? 100 : c.getInt("big-boost-level", 100);
+        bigBlocks = c == null ? 100 : Math.max(1, c.getInt("big-boost-blocks", 100));
     }
 
-    /** Hoeveel blokken je per hak tegelijk omhakt bij dit level (1 = gewoon). */
+    private final int bigLevel;
+    private final int bigBlocks;
+
+    /** Hoeveel blokken je per hak tegelijk omhakt: elke 10 levels één meer, op level 100 de hele boom. */
     int blocksAt(int level) {
-        if (level >= level2) return blocks2;
-        if (level >= level1) return blocks1;
-        return 1;
+        if (bigLevel > 0 && level >= bigLevel) return bigBlocks;
+        return Math.min(maxBlocks, 1 + level / levelsPerBlock);
     }
 
+    /** Vanaf welk level je er weer meer bij krijgt, of -1 als je al op het maximum zit. */
     int nextBoostLevel(int level) {
-        if (level < level1) return level1;
-        if (level < level2) return level2;
-        return -1;
+        if (bigLevel > 0 && level >= bigLevel) return -1;
+        if (blocksAt(level) >= maxBlocks) return bigLevel > 0 ? bigLevel : -1;
+        int next = (level / levelsPerBlock + 1) * levelsPerBlock;
+        return bigLevel > 0 ? Math.min(next, bigLevel) : next;
     }
 
     /** Hakt deze speler nu een boom om (dan tellen de extra blokken zonder nieuwe controle)? */
